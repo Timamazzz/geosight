@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 echo "Creating Migrations..."
 python manage.py makemigrations --noinput
 echo ====================================
