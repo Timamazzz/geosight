@@ -1,9 +1,10 @@
 from rest_framework import viewsets
+from geosight.utils.OptionsMetadata import OptionsMetadata
 
 
-class CustomModelViewSet(viewsets.ModelViewSet):
+class ModelViewSet(viewsets.ModelViewSet):
     serializer_list = {}
-    metadata_class = CustomOptionsMetadata
+    metadata_class = OptionsMetadata
 
     def get_serializer(self, *args, **kwargs):
         serializer_class = self.get_serializer_class()

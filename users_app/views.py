@@ -3,16 +3,15 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 
-from geosight.utils.CustomOptionsMetadata import CustomOptionsMetadata
+from geosight.utils.OptionsMetadata import OptionsMetadata
 from users_app.models import User, ActivationCode
 from users_app.serializers.reset_password_serializers import SendActivationCodeSerializer, \
     CheckActivationCodeSerializer, ResetPasswordSerializer
 
 
-# Create your views here.
 class BaseResetPasswordView(generics.CreateAPIView):
     permission_classes = [AllowAny]
-    metadata_class = CustomOptionsMetadata
+    metadata_class = OptionsMetadata
 
     def get_user(self, email):
         try:
@@ -28,7 +27,7 @@ class BaseResetPasswordView(generics.CreateAPIView):
 
     def validate_activation_code(self, activation_code):
         if activation_code.is_expired:
-            return Response({"error": "Activation code has expired"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Срок действия кода активации истек"}, status=status.HTTP_400_BAD_REQUEST)
         return None
 
 
@@ -44,11 +43,11 @@ class SendActivationCodeView(BaseResetPasswordView):
         user = self.get_user(email)
 
         if user is None:
-            return Response({"error": "User not found with this email"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Пользователь с таким адресом электронной почты не найден"}, status=status.HTTP_404_NOT_FOUND)
 
         serializer.send_activation_code(user)
 
-        return Response({"message": "Activation code sent successfully"}, status=status.HTTP_200_OK)
+        return Response({"message": "Код активации успешно отправлен"}, status=status.HTTP_200_OK)
 
 
 class CheckActivationCodeView(BaseResetPasswordView):
@@ -63,19 +62,19 @@ class CheckActivationCodeView(BaseResetPasswordView):
         user = self.get_user(email)
 
         if user is None:
-            return Response({"error": "User not found with this email"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Пользователь с таким адресом электронной почты не найден"}, status=status.HTTP_404_NOT_FOUND)
 
         code = serializer.validated_data.get('code', None)
         activation_code = self.get_activation_code(user, code)
 
         if activation_code is None:
-            return Response({"error": "Invalid activation code"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Недействительный код активации"}, status=status.HTTP_400_BAD_REQUEST)
 
         error_response = self.validate_activation_code(activation_code)
         if error_response:
             return error_response
 
-        return Response({"message": "Activation code is valid"}, status=status.HTTP_200_OK)
+        return Response({"message": "Код активации действителен"}, status=status.HTTP_200_OK)
 
 
 class ResetPasswordView(BaseResetPasswordView):
@@ -90,13 +89,13 @@ class ResetPasswordView(BaseResetPasswordView):
         user = self.get_user(email)
 
         if user is None:
-            return Response({"error": "User not found with this email"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Пользователь с таким адресом электронной почты не найден"}, status=status.HTTP_404_NOT_FOUND)
 
         code = serializer.validated_data.get('code', None)
         activation_code = self.get_activation_code(user, code)
 
         if activation_code is None:
-            return Response({"error": "Invalid activation code"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Недействительный код активации"}, status=status.HTTP_400_BAD_REQUEST)
 
         error_response = self.validate_activation_code(activation_code)
         if error_response:
@@ -108,4 +107,4 @@ class ResetPasswordView(BaseResetPasswordView):
 
         activation_code.delete()
 
-        return Response({"message": "Password reset successfully"}, status=status.HTTP_200_OK)
+        return Response({"message": "Пароль успешно сброшен"}, status=status.HTTP_200_OK)

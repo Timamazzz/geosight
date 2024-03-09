@@ -2,12 +2,40 @@ from rest_framework.metadata import SimpleMetadata
 from collections import OrderedDict
 from django.utils.encoding import force_str
 from rest_framework import serializers
+from rest_framework.utils.field_mapping import ClassLookupDict
+
+from geosight.utils.fields import PhoneField, PasswordField
 
 
-class CustomOptionsMetadata(SimpleMetadata):
+class OptionsMetadata(SimpleMetadata):
+    label_lookup = ClassLookupDict({
+        serializers.Field: 'field',
+        serializers.BooleanField: 'boolean',
+        serializers.CharField: 'string',
+        serializers.UUIDField: 'string',
+        serializers.URLField: 'url',
+        serializers.EmailField: 'email',
+        serializers.RegexField: 'regex',
+        serializers.SlugField: 'slug',
+        serializers.IntegerField: 'integer',
+        serializers.FloatField: 'float',
+        serializers.DecimalField: 'decimal',
+        serializers.DateField: 'date',
+        serializers.DateTimeField: 'datetime',
+        serializers.TimeField: 'time',
+        serializers.ChoiceField: 'choice',
+        serializers.MultipleChoiceField: 'multiple choice',
+        serializers.FileField: 'file upload',
+        serializers.ImageField: 'image upload',
+        serializers.ListField: 'list',
+        serializers.DictField: 'nested object',
+        serializers.Serializer: 'nested object',
+        PhoneField: 'phone',
+        PasswordField: 'password',
+    })
+
     def determine_metadata(self, request, view):
         metadata = super().determine_metadata(request, view)
-
         serializer_list = getattr(view, 'serializer_list', {})
 
         if serializer_list:
@@ -48,6 +76,8 @@ class CustomOptionsMetadata(SimpleMetadata):
             if value is not None and value != '':
                 field_info[attr] = force_str(value, strings_only=True)
 
+        self.set_styles_field(field_info, field)
+
         if getattr(field, 'child', None):
             field_info['child'] = self.get_field_info(field.child)
         elif getattr(field, 'fields', None):
@@ -66,3 +96,11 @@ class CustomOptionsMetadata(SimpleMetadata):
             ]
 
         return field_info
+
+    def set_styles_field(self, field_info, field):
+        field_style = field.style
+        if 'base_template' in field_style:
+            field_style.pop('base_template', None)
+
+        if field_style:
+            field_info['style'] = field_style
