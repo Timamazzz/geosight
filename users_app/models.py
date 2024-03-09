@@ -11,7 +11,7 @@ class UserManager(BaseUserManager):
 
     def _create_user(self, email, password, **extra_fields):
         if not email:
-            raise ValueError('The Email field must be set')
+            raise ValueError('Поле "Email" должно быть заполнено')
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
@@ -28,17 +28,24 @@ class UserManager(BaseUserManager):
         extra_fields.setdefault('is_active', True)
 
         if extra_fields.get("is_staff") is not True:
-            raise ValueError("Superuser must have is_staff=True.")
+            raise ValueError("Суперпользователь должен иметь is_staff=True.")
         if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
+            raise ValueError('Суперпользователь должен иметь is_superuser=True.')
 
         return self._create_user(email, password, **extra_fields)
 
 
 class User(AbstractUser):
-    username = models.CharField(max_length=150, unique=False, blank=True, null=True)
+    ROLE_CHOICES = [
+        ('user', 'Пользователь'),
+        ('staff', 'Сотрудник'),
+        ('manager', 'Менеджер'),
+        ('admin', 'Администратор'),
+    ]
+    username = models.CharField(max_length=150, unique=False, blank=True, null=True, verbose_name="Имя пользователя")
     email = models.EmailField(unique=True, blank=False, null=False, verbose_name="Email")
     phone_number = models.CharField(max_length=15, blank=True, null=True, unique=True, verbose_name="Номер телефона")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='user', verbose_name="Роль")
 
     objects = UserManager()
 
@@ -54,9 +61,9 @@ class User(AbstractUser):
 
 
 class ActivationCode(models.Model):
-    user = models.ForeignKey(User, on_delete=models.PROTECT)
-    code = models.CharField(max_length=4, default=generate_activation_code)
-    created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(User, on_delete=models.PROTECT, verbose_name="Пользователь")
+    code = models.CharField(max_length=4, default=generate_activation_code, verbose_name="Код активации")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
 
     @property
     def is_expired(self):
