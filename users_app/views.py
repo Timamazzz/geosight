@@ -120,7 +120,7 @@ class UserDetailView(RetrieveUpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     serializer_list = {
-        'retrieve': UserRetrieveSerializer,
-        'update': UserUpdateSerializer,
+        'get': UserRetrieveSerializer,
+        'patch': UserUpdateSerializer,
     }
     permission_classes = [IsUser]
