@@ -135,4 +135,4 @@ class UserViewSet(ModelViewSet):
         'patch': UserUpdateSerializer,
         'hello': UserRetrieveSerializer
     }
-    permission_classes = [IsUser]
+    permission_classes = [AllowAny]
