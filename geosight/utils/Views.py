@@ -16,7 +16,7 @@ class ModelViewSet(viewsets.ModelViewSet):
         return self.serializer_list.get(self.action, self.serializer_class)
 
 
-class MyRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
+class RetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
     serializer_list = {}
     metadata_class = OptionsMetadata
 
