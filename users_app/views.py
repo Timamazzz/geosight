@@ -117,6 +117,7 @@ class ResetPasswordView(BaseResetPasswordView):
 
 
 class UserDetailView(RetrieveUpdateAPIView):
+    queryset = User.objects.all()
     serializer_class = UserSerializer
     metadata_class = OptionsMetadata
     serializer_list = {
