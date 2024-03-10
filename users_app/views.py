@@ -1,12 +1,15 @@
 from rest_framework import generics
+from rest_framework.generics import RetrieveUpdateAPIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 
 from geosight.utils.OptionsMetadata import OptionsMetadata
 from users_app.models import User, ActivationCode
+from users_app.permissions import IsUser
 from users_app.serializers.reset_password_serializers import SendActivationCodeSerializer, \
     CheckActivationCodeSerializer, ResetPasswordSerializer
+from users_app.serializers.user_serializers import UserSerializer, UserRetrieveSerializer, UserUpdateSerializer
 
 
 class BaseResetPasswordView(generics.CreateAPIView):
@@ -43,7 +46,8 @@ class SendActivationCodeView(BaseResetPasswordView):
         user = self.get_user(email)
 
         if user is None:
-            return Response({"error": "Пользователь с таким адресом электронной почты не найден"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Пользователь с таким адресом электронной почты не найден"},
+                            status=status.HTTP_404_NOT_FOUND)
 
         serializer.send_activation_code(user)
 
@@ -62,7 +66,8 @@ class CheckActivationCodeView(BaseResetPasswordView):
         user = self.get_user(email)
 
         if user is None:
-            return Response({"error": "Пользователь с таким адресом электронной почты не найден"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Пользователь с таким адресом электронной почты не найден"},
+                            status=status.HTTP_404_NOT_FOUND)
 
         code = serializer.validated_data.get('code', None)
         activation_code = self.get_activation_code(user, code)
@@ -89,7 +94,8 @@ class ResetPasswordView(BaseResetPasswordView):
         user = self.get_user(email)
 
         if user is None:
-            return Response({"error": "Пользователь с таким адресом электронной почты не найден"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "Пользователь с таким адресом электронной почты не найден"},
+                            status=status.HTTP_404_NOT_FOUND)
 
         code = serializer.validated_data.get('code', None)
         activation_code = self.get_activation_code(user, code)
@@ -108,3 +114,13 @@ class ResetPasswordView(BaseResetPasswordView):
         activation_code.delete()
 
         return Response({"message": "Пароль успешно сброшен"}, status=status.HTTP_200_OK)
+
+
+class UserDetailView(RetrieveUpdateAPIView):
+    serializer_class = UserSerializer
+    metadata_class = OptionsMetadata
+    serializer_list = {
+        'retrieve': UserRetrieveSerializer,
+        'update': UserUpdateSerializer,
+    }
+    permission_classes = [IsUser]

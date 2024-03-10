@@ -9,7 +9,7 @@ class UserRolePermission(permissions.BasePermission):
     allowed_roles = []
 
     def has_permission(self, request, view):
-        return request.user and request.user.role in self.allowed_roles
+        return bool(request.user and request.user.is_authenticated and request.user.role in self.allowed_roles)
 
 
 class IsUser(UserRolePermission):
