@@ -32,9 +32,9 @@ class CompanyUpdateSerializer(WritableNestedModelSerializer):
 
 
 class CompanyListSerializer(serializers.ModelSerializer):
-    staff = serializers.SerializerMethodField()
-    managers = serializers.SerializerMethodField()
-    admins = serializers.SerializerMethodField()
+    staff = serializers.SerializerMethodField(label='Сотрудники')
+    managers = serializers.SerializerMethodField(label='Менеджеры')
+    admins = serializers.SerializerMethodField(label='Администраторыы')
 
     class Meta:
         model = Company
