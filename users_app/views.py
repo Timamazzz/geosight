@@ -140,6 +140,7 @@ class UserViewSet(ModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
 
+        print('request.user.role'),  request.user.role
         if request.user.role == 'staff':
             queryset = queryset.filter(company=request.user.company)
 
