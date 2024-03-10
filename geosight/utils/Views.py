@@ -26,11 +26,5 @@ class RetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
         return serializer_class(*args, **kwargs)
 
     def get_serializer_class(self):
-        action = self.action.lower()
-        print('get_serializer_class', action)
+        action = self.request.method.lower()
         return self.serializer_list.get(action, self.serializer_class)
-
-    def initial(self, request, *args, **kwargs):
-        super().initial(request, *args, **kwargs)
-        self.action = self.request.method.lower()
-        print('initial', self.action)
