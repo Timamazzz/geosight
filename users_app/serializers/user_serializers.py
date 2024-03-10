@@ -73,3 +73,8 @@ class UserEditSerializer(serializers.ModelSerializer):
 
         return super().update(instance, validated_data)
 
+
+class UserFromCompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'first_name', 'last_name', 'role', 'company', 'avatar']

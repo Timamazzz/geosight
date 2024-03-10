@@ -1,6 +1,8 @@
+from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 
 from users_app.models import Company, User
+from users_app.serializers.user_serializers import UserFromCompanySerializer
 
 
 class CompanySerializer(serializers.ModelSerializer):
@@ -9,16 +11,16 @@ class CompanySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class CompanyRetrieveSerializer(serializers.ModelSerializer):
-    users = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+class CompanyRetrieveSerializer(WritableNestedModelSerializer):
+    users = UserFromCompanySerializer(many=True, read_only=True)
 
     class Meta:
         model = Company
         fields = ['id', 'name', 'users']
 
 
-class CompanyUpdateSerializer(serializers.ModelSerializer):
-    users = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+class CompanyUpdateSerializer(WritableNestedModelSerializer):
+    users = UserFromCompanySerializer(many=True)
 
     class Meta:
         model = Company
@@ -44,8 +46,8 @@ class CompanyListSerializer(serializers.ModelSerializer):
         return User.objects.filter(company=obj, role='admin').count()
 
 
-class CompanyCreateSerializer(serializers.ModelSerializer):
-    users = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+class CompanyCreateSerializer(WritableNestedModelSerializer):
+    users = UserFromCompanySerializer(many=True)
 
     class Meta:
         model = Company
