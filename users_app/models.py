@@ -35,6 +35,17 @@ class UserManager(BaseUserManager):
         return self._create_user(email, password, **extra_fields)
 
 
+class Company(models.Model):
+    name = models.CharField(max_length=256, unique=True, verbose_name="Название компании")
+
+    class Meta:
+        verbose_name = "Компания"
+        verbose_name_plural = "Компании"
+
+    def __str__(self):
+        return self.name
+
+
 class User(AbstractUser):
     ROLE_CHOICES = [
         ('user', 'Пользователь'),
@@ -46,6 +57,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, blank=False, null=False, verbose_name="Email")
     phone_number = models.CharField(max_length=15, blank=True, null=True, unique=True, verbose_name="Номер телефона")
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='user', verbose_name="Роль")
+    company = models.ForeignKey(Company, on_delete=models.SET_NULL, blank=True, null=True, related_name='users', verbose_name="Компания")
 
     objects = UserManager()
 
