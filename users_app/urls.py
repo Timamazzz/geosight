@@ -6,8 +6,8 @@ from users_app.views import SendActivationCodeView, ResetPasswordView, CheckActi
     UserViewSet, CompanyViewSet
 
 router = DefaultRouter()
-router.register(r'', UserViewSet)
 router.register(r'companies', CompanyViewSet)
+router.register(r'', UserViewSet)
 
 urlpatterns = [
     path('login/', TokenObtainPairView.as_view(serializer_class=CustomJWTSerializer), name='token-obtain-pair'),
