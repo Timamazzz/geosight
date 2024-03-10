@@ -141,7 +141,7 @@ class UserViewSet(ModelViewSet):
         queryset = self.filter_queryset(self.get_queryset())
 
         print('request.user.role', request.user.role)
-        if request.user.role == 'staff':
+        if request.user.role == 'manager':
             queryset = queryset.filter(company=request.user.company)
 
         page = self.paginate_queryset(queryset)
