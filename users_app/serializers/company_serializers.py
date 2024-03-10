@@ -49,4 +49,4 @@ class CompanyCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Company
-        fields = ['name']
+        fields = ['name', 'users']
