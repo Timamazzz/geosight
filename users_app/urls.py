@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from geosight.utils.CustomJWTSerializer import CustomJWTSerializer
-from users_app.views import SendActivationCodeView, ResetPasswordView, CheckActivationCodeView
+from users_app.views import SendActivationCodeView, ResetPasswordView, CheckActivationCodeView, UserDetailView
 
 router = DefaultRouter()
 
@@ -12,5 +12,6 @@ urlpatterns = [
     path('send-activation-code/', SendActivationCodeView.as_view(), name='send-activation-code'),
     path('check-activation-code/', CheckActivationCodeView.as_view(), name='check-activation-code'),
     path('reset-password/', ResetPasswordView.as_view(), name='reset-password'),
+    path('<int:pk>/', UserDetailView.as_view(), name='user-detail'),
     path('', include(router.urls)),
 ]
