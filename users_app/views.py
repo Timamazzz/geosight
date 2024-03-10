@@ -3,14 +3,16 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
+from geosight import settings
 from geosight.utils.ModelViewSet import ModelViewSet
 from geosight.utils.OptionsMetadata import OptionsMetadata
 from users_app.models import User, ActivationCode
-from users_app.permissions import IsUser, IsStaff, IsSuperUser, IsManager
+from users_app.permissions import IsUser, IsSuperUser, IsManager
 from users_app.serializers.reset_password_serializers import SendActivationCodeSerializer, \
     CheckActivationCodeSerializer, ResetPasswordSerializer
 from users_app.serializers.user_serializers import UserSerializer, UserRetrieveSerializer, UserUpdateSerializer, \
-    UserListSerializer
+    UserListSerializer, UserCreateSerializer
+from post_office import mail
 
 
 class BaseResetPasswordView(generics.CreateAPIView):
@@ -123,7 +125,8 @@ class UserViewSet(ModelViewSet):
     serializer_list = {
         'retrieve': UserRetrieveSerializer,
         'update': UserUpdateSerializer,
-        'list': UserListSerializer
+        'list': UserListSerializer,
+        'create': UserCreateSerializer
     }
 
     def get_permissions(self):
@@ -133,6 +136,8 @@ class UserViewSet(ModelViewSet):
             permission_classes = [IsManager]
         elif self.action == 'destroy':
             permission_classes = [IsSuperUser]
+        elif self.action == 'create':
+            permission_classes = [IsManager]
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
@@ -140,7 +145,6 @@ class UserViewSet(ModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
 
-        print('request.user.role', request.user.role)
         if request.user.role == 'manager':
             queryset = queryset.filter(company=request.user.company)
 
@@ -151,3 +155,32 @@ class UserViewSet(ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        if request.user.role == 'manager':
+            serializer.validated_data['company'] = request.user.company
+        elif request.user.role == 'admin':
+            if serializer.validated_data['company']:
+                return Response({'error': 'Не выбрана компания'}, status=status.HTTP_400_BAD_REQUEST)
+
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+
+        if serializer.validated_data['is_send_email']:
+            subject = 'Данные для входа'
+            message = f'Добро пожаловать! Ваш логин: {serializer.validated_data["email"]}, ваш пароль: {serializer.validated_data["password"]}'
+            html_message = f'<p>Добро пожаловать!</p><p>Ваш логин: {serializer.validated_data["email"]}</p><p>Ваш пароль: {serializer.validated_data["password"]}</p>'
+
+            mail.send(
+                serializer.validated_data['email'],
+                settings.DEFAULT_FROM_EMAIL,
+                subject=subject,
+                message=message,
+                html_message=html_message,
+                priority='now'
+            )
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)

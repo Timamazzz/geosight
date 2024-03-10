@@ -33,3 +33,11 @@ class UserListSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'first_name', 'last_name', 'role', 'phone_number', 'email']
 
+
+class UserCreateSerializer(serializers.ModelSerializer):
+    phone_number = PhoneField()
+    is_send_email = serializers.BooleanField(label='Отправить пользователю данные на почту?')
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'phone_number', 'email', 'password', 'role', 'company', 'is_send_email']
