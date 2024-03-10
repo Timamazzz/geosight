@@ -122,5 +122,6 @@ class UserDetailView(RetrieveUpdateAPIView):
     serializer_list = {
         'get': UserRetrieveSerializer,
         'patch': UserUpdateSerializer,
+        'hello': UserRetrieveSerializer
     }
     permission_classes = [IsUser]
