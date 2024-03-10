@@ -16,7 +16,7 @@ class ModelViewSet(viewsets.ModelViewSet):
         return self.serializer_list.get(self.action, self.serializer_class)
 
 
-class RetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
+class MyRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
     serializer_list = {}
     metadata_class = OptionsMetadata
 
@@ -26,6 +26,9 @@ class RetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
         return serializer_class(*args, **kwargs)
 
     def get_serializer_class(self):
-        action = self.request.method.lower()
-        print('action', action)
+        action = self.action.lower()  # Получаем имя действия (action) из атрибута action
         return self.serializer_list.get(action, self.serializer_class)
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        self.action = self.request.method.lower()  # Устанавливаем атрибут action на основе HTTP метода запроса
