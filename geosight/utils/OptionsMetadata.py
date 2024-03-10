@@ -37,10 +37,12 @@ class OptionsMetadata(SimpleMetadata):
     def determine_metadata(self, request, view):
         metadata = super().determine_metadata(request, view)
         serializer_list = getattr(view, 'serializer_list', {})
-
+        print('serializer_list', serializer_list)
         if serializer_list:
             actions_metadata = {}
             for key, serializer_class in serializer_list.items():
+                print('key', key)
+                print('serializer_class', serializer_class)
                 serializer_instance = serializer_class()
                 fields = self.get_serializer_info(serializer_instance)
                 actions_metadata[key] = fields
