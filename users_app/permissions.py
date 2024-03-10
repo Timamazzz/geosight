@@ -1,4 +1,5 @@
 from rest_framework import permissions
+from rest_framework.permissions import BasePermission
 
 
 class UserRolePermission(permissions.BasePermission):
@@ -38,3 +39,12 @@ class IsAdmin(UserRolePermission):
     Разрешение для админа
     """
     allowed_roles = ['admin']
+
+
+class IsSuperUser(BasePermission):
+    """
+    Allows access only to admin users.
+    """
+
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_superuser)

@@ -26,7 +26,10 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         fields = ['id', 'avatar', 'first_name', 'last_name', 'phone_number', 'email']
 
 
-class UserVarSerializer(serializers.ModelSerializer):
+class UserListSerializer(serializers.ModelSerializer):
+    phone_number = PhoneField()
+
     class Meta:
         model = User
-        fields = ['id']
+        fields = ['id', 'first_name', 'last_name', 'role', 'phone_number', 'email']
+

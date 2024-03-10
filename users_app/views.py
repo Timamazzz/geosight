@@ -1,17 +1,16 @@
 from rest_framework import generics
-from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 
-from geosight.utils.Views import RetrieveUpdateAPIView
+from geosight.utils.ModelViewSet import ModelViewSet
 from geosight.utils.OptionsMetadata import OptionsMetadata
 from users_app.models import User, ActivationCode
-from users_app.permissions import IsUser
+from users_app.permissions import IsUser, IsStaff, IsSuperUser
 from users_app.serializers.reset_password_serializers import SendActivationCodeSerializer, \
     CheckActivationCodeSerializer, ResetPasswordSerializer
 from users_app.serializers.user_serializers import UserSerializer, UserRetrieveSerializer, UserUpdateSerializer, \
-    UserVarSerializer
+    UserListSerializer
 
 
 class BaseResetPasswordView(generics.CreateAPIView):
@@ -118,19 +117,36 @@ class ResetPasswordView(BaseResetPasswordView):
         return Response({"message": "Пароль успешно сброшен"}, status=status.HTTP_200_OK)
 
 
-class UserDetailView(RetrieveUpdateAPIView):
+class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     serializer_list = {
         'retrieve': UserRetrieveSerializer,
         'update': UserUpdateSerializer,
-        'var': UserVarSerializer,
+        'list': UserListSerializer
     }
-    permission_classes = [IsUser]
 
-    @action(detail=True, methods=['post'])
-    def var(self, request, *args, **kwargs):
-        serializer = self.get_serializer()
-        print('var')
-        print('serializer', serializer)
-        return
+    def get_permissions(self):
+        if self.action in ['retrieve', 'update']:
+            permission_classes = [IsUser]
+        elif self.action == 'list':
+            permission_classes = [IsStaff]
+        elif self.action == 'destroy':
+            permission_classes = [IsSuperUser]
+        else:
+            permission_classes = [AllowAny]
+        return [permission() for permission in permission_classes]
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        if IsStaff().has_permission(request, self):
+            queryset = queryset.filter(company=request.user.company)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
