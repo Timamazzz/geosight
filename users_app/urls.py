@@ -2,9 +2,11 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from geosight.utils.CustomJWTSerializer import CustomJWTSerializer
-from users_app.views import SendActivationCodeView, ResetPasswordView, CheckActivationCodeView, UserDetailView
+from users_app.views import SendActivationCodeView, ResetPasswordView, CheckActivationCodeView, UserDetailView, \
+    UserViewSet
 
 router = DefaultRouter()
+router.register(r'', UserViewSet)
 
 urlpatterns = [
     path('login/', TokenObtainPairView.as_view(serializer_class=CustomJWTSerializer), name='token-obtain-pair'),

@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 
-from geosight.utils.Views import RetrieveUpdateAPIView
+from geosight.utils.Views import RetrieveUpdateAPIView, ModelViewSet
 from geosight.utils.OptionsMetadata import OptionsMetadata
 from users_app.models import User, ActivationCode
 from users_app.permissions import IsUser
@@ -117,6 +117,17 @@ class ResetPasswordView(BaseResetPasswordView):
 
 
 class UserDetailView(RetrieveUpdateAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    serializer_list = {
+        'get': UserRetrieveSerializer,
+        'patch': UserUpdateSerializer,
+        'hello': UserRetrieveSerializer
+    }
+    permission_classes = [IsUser]
+
+
+class UserViewSet(ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     serializer_list = {
