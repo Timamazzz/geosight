@@ -1,12 +1,12 @@
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 from geosight.utils.ModelViewSet import ModelViewSet
 from geosight.utils.OptionsMetadata import OptionsMetadata
 from users_app.models import User, ActivationCode
-from users_app.permissions import IsUser, IsStaff, IsSuperUser
+from users_app.permissions import IsUser, IsStaff, IsSuperUser, IsManager
 from users_app.serializers.reset_password_serializers import SendActivationCodeSerializer, \
     CheckActivationCodeSerializer, ResetPasswordSerializer
 from users_app.serializers.user_serializers import UserSerializer, UserRetrieveSerializer, UserUpdateSerializer, \
@@ -130,11 +130,11 @@ class UserViewSet(ModelViewSet):
         if self.action in ['retrieve', 'update']:
             permission_classes = [IsUser]
         elif self.action == 'list':
-            permission_classes = [IsStaff]
+            permission_classes = [IsManager]
         elif self.action == 'destroy':
             permission_classes = [IsSuperUser]
         else:
-            permission_classes = [AllowAny]
+            permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
 
     def list(self, request, *args, **kwargs):
