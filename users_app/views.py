@@ -2,13 +2,15 @@ from rest_framework import generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny
 
 from geosight import settings
 from geosight.utils.ModelViewSet import ModelViewSet
 from geosight.utils.OptionsMetadata import OptionsMetadata
-from users_app.models import User, ActivationCode
-from users_app.permissions import IsUser, IsSuperUser, IsManager
+from users_app.models import User, ActivationCode, Company
+from users_app.permissions import IsUser, IsSuperUser, IsManager, IsAdmin
+from users_app.serializers.company_serializers import CompanyListSerializer, CompanyCreateSerializer, \
+    CompanyRetrieveSerializer, CompanyUpdateSerializer, CompanySerializer
 from users_app.serializers.reset_password_serializers import SendActivationCodeSerializer, \
     CheckActivationCodeSerializer, ResetPasswordSerializer
 from users_app.serializers.user_serializers import UserSerializer, UserRetrieveSerializer, UserUpdateSerializer, \
@@ -195,3 +197,15 @@ class UserViewSet(ModelViewSet):
 
         self.perform_update(serializer)
         return Response(serializer.data)
+
+
+class CompanyViewSet(ModelViewSet):
+    queryset = Company.objects.all()
+    serializer_class = CompanySerializer
+    serializer_list = {
+        'retrieve': CompanyRetrieveSerializer,
+        'update': CompanyUpdateSerializer,
+        'list': CompanyListSerializer,
+        'create': CompanyCreateSerializer,
+    }
+    permission_classes = [IsAdmin]
