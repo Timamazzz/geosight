@@ -1,4 +1,5 @@
 from rest_framework import generics
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -11,7 +12,7 @@ from users_app.permissions import IsUser, IsSuperUser, IsManager
 from users_app.serializers.reset_password_serializers import SendActivationCodeSerializer, \
     CheckActivationCodeSerializer, ResetPasswordSerializer
 from users_app.serializers.user_serializers import UserSerializer, UserRetrieveSerializer, UserUpdateSerializer, \
-    UserListSerializer, UserCreateSerializer
+    UserListSerializer, UserCreateSerializer, UserEditSerializer
 from post_office import mail
 
 
@@ -126,20 +127,17 @@ class UserViewSet(ModelViewSet):
         'retrieve': UserRetrieveSerializer,
         'update': UserUpdateSerializer,
         'list': UserListSerializer,
-        'create': UserCreateSerializer
+        'create': UserCreateSerializer,
+        'edit': UserEditSerializer,
     }
 
     def get_permissions(self):
         if self.action in ['retrieve', 'update']:
             permission_classes = [IsUser]
-        elif self.action == 'list':
-            permission_classes = [IsManager]
-        elif self.action == 'destroy':
-            permission_classes = [IsSuperUser]
-        elif self.action == 'create':
+        elif self.action in ['list', 'create', 'edit']:
             permission_classes = [IsManager]
         else:
-            permission_classes = [IsAuthenticated]
+            permission_classes = [IsSuperUser]
         return [permission() for permission in permission_classes]
 
     def list(self, request, *args, **kwargs):
@@ -184,3 +182,16 @@ class UserViewSet(ModelViewSet):
             )
 
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    @action(detail=True, methods=['put', 'patch'])
+    def edit(self, request, pk=None):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        if request.user.role == 'manager':
+            if instance.company != request.user.company:
+                return Response({'error': 'Недостаточно прав доступа'}, status=status.HTTP_403_FORBIDDEN)
+
+        self.perform_update(serializer)
+        return Response(serializer.data)
