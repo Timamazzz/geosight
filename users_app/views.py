@@ -140,7 +140,7 @@ class UserViewSet(ModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
 
-        if IsStaff().has_permission(request, self):
+        if request.user.role == 'staff':
             queryset = queryset.filter(company=request.user.company)
 
         page = self.paginate_queryset(queryset)
