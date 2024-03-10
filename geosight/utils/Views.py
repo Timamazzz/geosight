@@ -26,9 +26,11 @@ class RetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
         return serializer_class(*args, **kwargs)
 
     def get_serializer_class(self):
-        action = self.action.lower()  # Получаем имя действия (action) из атрибута action
+        action = self.action.lower()
+        print('get_serializer_class', action)
         return self.serializer_list.get(action, self.serializer_class)
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
-        self.action = self.request.method.lower()  # Устанавливаем атрибут action на основе HTTP метода запроса
+        self.action = self.request.method.lower()
+        print('initial', self.action)
