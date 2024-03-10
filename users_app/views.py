@@ -163,7 +163,7 @@ class UserViewSet(ModelViewSet):
         if request.user.role == 'manager':
             serializer.validated_data['company'] = request.user.company
         elif request.user.role == 'admin':
-            if serializer.validated_data['company']:
+            if not serializer.validated_data['company']:
                 return Response({'error': 'Не выбрана компания'}, status=status.HTTP_400_BAD_REQUEST)
 
         self.perform_create(serializer)
