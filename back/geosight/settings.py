@@ -15,6 +15,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 load_dotenv()
+PRODUCTION = bool(os.environ.get("PRODUCTION", "false").lower() == "true")
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -190,8 +192,14 @@ EMAIL_HOST_PASSWORD = 'MAuP1fyc9qECwntxrG2m'
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000000
 
 # Celery
-CELERY_BROKER_URL = f"redis://redis:{os.environ.get("REDIS_PORT", 6379)}"
-CELERY_RESULT_BACKEND = f"redis://redis:{os.environ.get("REDIS_PORT", 6379)}"
+if PRODUCTION:
+
+    CELERY_BROKER_URL = "redis://redis:6379"
+    CELERY_RESULT_BACKEND = "redis://redis:6379"
+else:
+    CELERY_BROKER_URL = "redis://redis_dev:6379"
+    CELERY_RESULT_BACKEND = "redis://redis_dev:6379"
+
 CELERY_TIMEZONE = 'Europe/Moscow'
 CELERY_CREATE_MISSING_QUEUES = True
 CELERY_TASK_DEFAULT_QUEUE = os.getenv('QUEUE_DEFAULT', default='celery')
@@ -212,7 +220,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('redis', os.environ.get("REDIS_PORT", 6379))],
+            "hosts": [('redis' if PRODUCTION else 'redis_dev', 6379)],
         },
     },
 }
