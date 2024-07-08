@@ -19,8 +19,8 @@ services:
     env_file:
      - ./back/.env
     depends_on:
-      - db
-      - redis
+      - db_dev
+      - redis_dev
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:8000/admin/ || exit 1" ]
       interval: 30s
@@ -40,7 +40,7 @@ services:
     env_file:
       - ./back/.env
     depends_on:
-      web:
+      web_dev:
         condition: service_healthy
   db_dev:
     image: postgis/postgis:latest
@@ -72,7 +72,7 @@ services:
     ports:
       - 3001:3000
     depends_on:
-      web:
+      web_dev:
         condition: service_healthy
   nginx_dev:
     image: nginx
@@ -86,9 +86,9 @@ services:
     ports:
       - 80:80
     depends_on:
-      - web
-      - martin
-      - daphne
+      - web_dev
+      - martin_dev
+      - daphne_dev
   celery_dev:
     build:
       context: ./back
@@ -98,8 +98,8 @@ services:
     env_file:
       - ./back/.env
     depends_on:
-      - redis
-      - web
+      - redis_dev
+      - web_dev
   redis_dev:
     image: redis:latest
     restart: always
