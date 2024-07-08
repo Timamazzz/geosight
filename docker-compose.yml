@@ -15,7 +15,7 @@ services:
       - ./back/:/var/www/geosight
       - media_data:/var/www/geosight/media
     ports:
-      - 8002:8000
+      - 8000:8000
     env_file:
      - ./back/.env
     depends_on:
@@ -33,7 +33,7 @@ services:
     command: daphne -b 0.0.0.0 -p 8089 geosight.asgi:application
     restart: always
     ports:
-      - 8091:8089
+      - 8089:8089
     volumes:
       - ./back/:/var/www/geosight
       - media_data:/var/www/geosight/media
@@ -51,7 +51,7 @@ services:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - 5435:5432
+      - 5432:5432
   osm_db:
     image: postgis/postgis:latest
     volumes:
@@ -63,14 +63,14 @@ services:
       POSTGRES_USER: ${DB_USER_OSM}
       POSTGRES_PASSWORD: ${DB_PASSWORD_OSM}
     ports:
-      - 5436:5432
+      - 5433:5432
   martin:
     image: maplibre/martin:latest
     restart: always
     environment:
       DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db/${DB_NAME}
     ports:
-      - 3002:3000
+      - 3000:3000
     depends_on:
       web:
         condition: service_healthy
@@ -106,12 +106,7 @@ services:
     image: redis:latest
     restart: always
     ports:
-      - 6381:6379
-
-networks:
-  default:
-    external:
-      name: geosight_prod_default
+      - 6379:6379
 
 volumes:
   postgres_data:
