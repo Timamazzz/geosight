@@ -1,6 +1,6 @@
 version: "3"
 services:
-  web:
+  web_dev:
     build:
       context: ./back
       dockerfile: ./Dockerfile
@@ -19,14 +19,14 @@ services:
     env_file:
      - ./back/.env
     depends_on:
-      - db
-      - redis
+      - db_dev
+      - redis_dev
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:8000/admin/ || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 5
-  daphne:
+  daphne_dev:
     build:
       context: ./back
       dockerfile: ./Dockerfile
@@ -40,9 +40,9 @@ services:
     env_file:
       - ./back/.env
     depends_on:
-      web:
+      web_dev:
         condition: service_healthy
-  db:
+  db_dev:
     image: postgis/postgis:latest
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -52,7 +52,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
       - 5433:5432
-  osm_db:
+  osm_db_dev:
     image: postgis/postgis:latest
     volumes:
       - postgres_osm_data:/var/lib/postgresql/data
@@ -64,7 +64,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD_OSM}
     ports:
       - 5434:5433
-  martin:
+  martin_dev:
     image: maplibre/martin:latest
     restart: always
     environment:
@@ -72,9 +72,9 @@ services:
     ports:
       - 3001:3000
     depends_on:
-      web:
+      web_dev:
         condition: service_healthy
-  nginx:
+  nginx_dev:
     image: nginx
     env_file:
       - .env
@@ -86,10 +86,10 @@ services:
     ports:
       - 80:80
     depends_on:
-      - web
-      - martin
-      - daphne
-  celery:
+      - web_dev
+      - martin_dev
+      - daphne_dev
+  celery_dev:
     build:
       context: ./back
     command: celery -A geosight.celery worker -l info -E -Q ${QUEUE_DEFAULT}  -c 10
@@ -98,9 +98,9 @@ services:
     env_file:
       - ./back/.env
     depends_on:
-      - redis
-      - web
-  redis:
+      - redis_dev
+      - web_dev
+  redis_dev:
     image: redis:latest
     restart: always
     ports:
