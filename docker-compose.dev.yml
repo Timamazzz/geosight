@@ -3,7 +3,7 @@ services:
   web:
     build:
       context: ./back
-      dockerfile: ./back/Dockerfile
+      dockerfile: ./Dockerfile
     command: sh -c "python manage.py makemigrations --noinput &&
       python manage.py migrate --noinput &&
       python manage.py collectstatic --noinput &&
