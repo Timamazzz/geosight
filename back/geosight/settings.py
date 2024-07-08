@@ -190,8 +190,8 @@ EMAIL_HOST_PASSWORD = 'MAuP1fyc9qECwntxrG2m'
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 1000000
 
 # Celery
-CELERY_BROKER_URL = "redis://redis:6379"
-CELERY_RESULT_BACKEND = "redis://redis:6379"
+CELERY_BROKER_URL = f"redis://redis:{os.environ.get("REDIS_PORT", 6379)}"
+CELERY_RESULT_BACKEND = f"redis://redis:{os.environ.get("REDIS_PORT", 6379)}"
 CELERY_TIMEZONE = 'Europe/Moscow'
 CELERY_CREATE_MISSING_QUEUES = True
 CELERY_TASK_DEFAULT_QUEUE = os.getenv('QUEUE_DEFAULT', default='celery')
@@ -212,7 +212,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('redis', 6379)],
+            "hosts": [('redis', os.environ.get("REDIS_PORT", 6379))],
         },
     },
 }
