@@ -1,0 +1,268 @@
+from django.db.models import Min, Max, F, BigIntegerField, FloatField
+from django.db.models.functions import Cast
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+from geosight.utils.ModelViewSet import ModelViewSet
+from maps_app.models import Map, MapLayer, MapStyle, CreateScoringMapLayerTask, Feature, ScoringConfiguration
+from maps_app.serializers.map_layers_serializers import MapLayerSerializer, MapLayerListSerializer, \
+    MapLayerCreateSerializer, MapLayerUpdateSerializer, MapLayerScoringCreateSerializer, MapLayerPropertiesSerializer, \
+    MapLayerUpdateLineStylesSerializer, MapLayerUpdatePointStylesSerializer, MapLayerUpdatePolygonStylesSerializer
+from maps_app.serializers.map_serializers import MapSerializer, MapListSerializer, MapCreateSerializer, \
+    MapUpdateSerializer, MapShareSerializer, MapShowSerializer
+from users_app.permissions import IsUser, IsManager, IsSuperUser
+from .serializers.map_style_seralizers import MapStyleSerializer
+from .tasks import create_features, create_scoring_features
+
+
+# Create your views here.
+class MapViewSet(ModelViewSet):
+    queryset = Map.objects.all()
+    serializer_class = MapSerializer
+    serializer_list = {
+        'list': MapListSerializer,
+        'create': MapCreateSerializer,
+        'update': MapUpdateSerializer,
+        'share': MapShareSerializer,
+        'show': MapShowSerializer
+    }
+
+    def get_permissions(self):
+        if self.action in ['list']:
+            permission_classes = [IsUser]
+        elif self.action in ['create', 'update']:
+            permission_classes = [IsManager]
+        else:
+            permission_classes = [IsSuperUser]
+
+        return [permission() for permission in permission_classes]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+
+        if not user.is_superuser:
+            company = user.company
+
+            if company:
+                queryset = queryset.filter(company=company)
+            else:
+                return Response('У пользователя нет компании', status=status.HTTP_400_BAD_REQUEST)
+
+        return queryset
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        company = user.company
+        if company:
+            serializer.save(company=company)
+        else:
+            return Response('У пользователя нет компании', status=status.HTTP_400_BAD_REQUEST)
+
+    @action(methods=['get'], detail=True)
+    def show(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+
+class MapLayerViewSet(ModelViewSet):
+    queryset = MapLayer.objects.all()
+    serializer_class = MapLayerSerializer
+    serializer_list = {
+        'list': MapLayerListSerializer,
+        'create': MapLayerCreateSerializer,
+        'update': MapLayerUpdateSerializer,
+        'scoring': MapLayerScoringCreateSerializer,
+        'properties': MapLayerPropertiesSerializer,
+        'line': MapLayerUpdateLineStylesSerializer,
+        'point': MapLayerUpdatePointStylesSerializer,
+        'polygon': MapLayerUpdatePolygonStylesSerializer,
+    }
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+
+        if not user.is_superuser:
+            company = user.company
+
+            if company:
+                queryset = queryset.filter(company=company)
+            else:
+                return Response('У пользователя нет компании', status=status.HTTP_400_BAD_REQUEST)
+
+        return queryset
+
+    def get_permissions(self):
+        if self.action in ['list']:
+            permission_classes = [IsUser]
+        elif self.action in ['create', 'update']:
+            permission_classes = [IsManager]
+        else:
+            permission_classes = [IsSuperUser]
+
+        return [permission() for permission in permission_classes]
+
+    def perform_create(self, serializer):
+        files = self.request.FILES.getlist('file')
+        file = files[0] if files else None
+        instance = serializer.save(creator=self.request.user)
+
+        if file:
+            if file.name.endswith(('.geojson', '.csv')):
+                create_features.delay(instance.id, file.name, file.read())
+            else:
+                instance.error = 'Unsupported file type'
+                instance.save()
+
+    @action(detail=False, methods=['post'])
+    def scoring(self, request):
+        try:
+            active_config = ScoringConfiguration.objects.get(is_active=True)
+        except ScoringConfiguration.DoesNotExist:
+            return Response({"detail": "Нет активной конфигурации скоринга."},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        in_progress_tasks = CreateScoringMapLayerTask.objects.filter(
+            status='in_progress').count()
+
+        if in_progress_tasks >= active_config.max_scoring_layers:
+            return Response({"detail": "Превышено максимальное количество выполняемых задач. Попробуйте позже."},
+                            status=status.HTTP_429_TOO_MANY_REQUESTS)
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        layer = serializer.save(creator=request.user)
+
+        task = create_scoring_features.delay(layer.id)
+
+        CreateScoringMapLayerTask.objects.create(task_id=task.id, layer=layer,
+                                                 status='in_progress')
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['get'])
+    def properties(self, request, pk=None):
+        map_layer = self.get_object()
+        features = Feature.objects.filter(map_layer=map_layer)
+
+        if not features.exists():
+            return Response([], status=status.HTTP_200_OK)
+
+        sample_properties = features.first().properties
+        unique_keys = []
+
+        type_mapping = {
+            str: 'string',
+            int: 'integer',
+            float: 'float',
+            bool: 'boolean',
+            list: 'array',
+            dict: 'object',
+            type(None): 'null'
+        }
+
+        requested_types = request.query_params.getlist('types')
+        allowed_types = set(type_mapping.values())
+
+        if requested_types:
+            requested_types = set(requested_types).intersection(allowed_types)
+        else:
+            requested_types = allowed_types
+
+        for key, value in sample_properties.items():
+            value_type = type_mapping.get(type(value), 'unknown')
+            if value_type in requested_types:
+                unique_keys.append({"name": key, "type": value_type})
+
+        serializer = MapLayerPropertiesSerializer(unique_keys, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['get'], url_path='property-values')
+    def property_values(self, request, pk=None):
+        map_layer = self.get_object()
+        property_name = request.query_params.get('property_name')
+
+        if not property_name:
+            return Response({"detail": "Параметр 'property_name' обязателен."}, status=status.HTTP_400_BAD_REQUEST)
+
+        features = Feature.objects.filter(map_layer=map_layer).values_list(f'properties__{property_name}',
+                                                                           flat=True).distinct()
+
+        if not features.exists():
+            return Response({"detail": f"No features found with the property '{property_name}'."},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        sample_value = features.first()
+
+        if isinstance(sample_value, (int, float)):
+            features_casted = None
+            if isinstance(sample_value, int):
+                features_casted = features.annotate(
+                    property_value_casted=Cast(F(f'properties__{property_name}'), output_field=BigIntegerField())
+                )
+            elif isinstance(sample_value, float):
+                features_casted = features.annotate(
+                    property_value_casted=Cast(F(f'properties__{property_name}'), output_field=FloatField())
+                )
+            if features_casted:
+                min_value = features_casted.aggregate(min_value=Min('property_value_casted'))['min_value']
+                max_value = features_casted.aggregate(max_value=Max('property_value_casted'))['max_value']
+                return Response({
+                    'min_value': min_value,
+                    'max_value': max_value,
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    'error': "Ошибка при аннотации данных."
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+        elif isinstance(sample_value, str):
+            limit = int(request.query_params.get('limit', 10))
+            offset = int(request.query_params.get('offset', 0))
+            unique_values = list(set(features))
+            total_count = len(unique_values)
+            paginated_values = unique_values[offset:offset + limit]
+            return Response({
+                'results': paginated_values,
+                'count': total_count,
+                'limit': limit,
+                'offset': offset,
+            }, status=status.HTTP_200_OK)
+
+        else:
+            return Response({"detail": "Unsupported field type."}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['put'])
+    def line(self, request, pk=None):
+        map_layer = self.get_object()
+        serializer = self.get_serializer(map_layer, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['put'])
+    def point(self, request, pk=None):
+        map_layer = self.get_object()
+        serializer = self.get_serializer(map_layer, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['put'])
+    def polygon(self, request, pk=None):
+        map_layer = self.get_object()
+        serializer = self.get_serializer(map_layer, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class MapStyleViewSet(ModelViewSet):
+    queryset = MapStyle.objects.all()
+    serializer_class = MapStyleSerializer
+    serializer_list = {
+        'list': MapStyleSerializer,
+    }
