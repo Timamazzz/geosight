@@ -29,7 +29,7 @@ services:
   daphne:
     build:
       context: ./back
-      dockerfile: ./back/Dockerfile
+      dockerfile: ./Dockerfile
     command: daphne -b 0.0.0.0 -p 8089 geosight.asgi:application
     restart: always
     ports:
