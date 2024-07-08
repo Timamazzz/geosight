@@ -68,7 +68,7 @@ services:
     image: maplibre/martin:latest
     restart: always
     environment:
-      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db/${DB_NAME}
+      DATABASE_URL: postgresql://${DB_USER}:${DB_PASSWORD}@db_dev/${DB_NAME}
     ports:
       - 3001:3000
     depends_on:
