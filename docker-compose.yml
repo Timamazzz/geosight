@@ -86,6 +86,7 @@ services:
     command: /bin/sh /nginx.sh
     restart: always
     ports:
+      - 80:80
       - 443:443
     depends_on:
       - web
