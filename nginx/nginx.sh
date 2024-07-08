@@ -10,7 +10,7 @@ nginx -s stop
 nginx
 
 # Получение сертификата
-certbot certonly --nginx --non-interactive --agree-tos --email geosight@mail.com -d app.geosight.ru
+certbot certonly --nginx --agree-tos --email ваш@адрес.почты -d app.geosight.ru
 
 # Остановка временного nginx
 nginx -s stop
