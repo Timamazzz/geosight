@@ -56,7 +56,7 @@ services:
     image: postgis/postgis:latest
     volumes:
       - postgres_osm_data:/var/lib/postgresql/data
-      - ./scripts/init-osm-extensions.sql:/docker-entrypoint-initdb.d
+      - ./scripts/init-osm-extensions.sql:/docker-entrypoint-initdb.d/init-osm-extensions.sql
       - ./osm_backup.dump:/osm_backup.dump
     environment:
       POSTGRES_DB: osm-data
