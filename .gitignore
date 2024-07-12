@@ -6,6 +6,7 @@ __pycache__
 db.sqlite3
 back/media
 static
+!front/build/static
 
 # Backup files #
 *.bak

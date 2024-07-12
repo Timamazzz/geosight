@@ -81,6 +81,8 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./back/static/:/var/www/geosight/static
+      - ./front/build/static/:/var/www/geosight/static
+      - ./front/build/:/var/www/geosight/front
       - media_data:/var/www/geosight/media
       - ./nginx/nginx.sh:/nginx.sh
     command: /bin/sh /nginx.sh
