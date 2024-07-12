@@ -21,14 +21,5 @@ cat /etc/nginx/nginx.conf
 apt-get install -y lsof
 apt-get install -y dnsutils
 
-# Создаем директорию для объединенной статики
-mkdir -p /var/www/geosight/static
-
-# Копируем статику Django
-cp -r /var/www/geosight/django_static/* /var/www/geosight/static/
-
-# Копируем статику React, заменяя файлы, если они уже существуют
-cp -r /var/www/geosight/front/static/* /var/www/geosight/static/
-
 # Запуск nginx
 exec nginx -g 'daemon off;'
