@@ -245,9 +245,15 @@ class MapLayerViewSet(ModelViewSet):
     def _get_string_property_values(self, features, request):
         limit = int(request.query_params.get('limit', 10))
         offset = int(request.query_params.get('offset', 0))
+        search_query = request.query_params.get('search', None)
+
         unique_values = list(set(features))
+        if search_query:
+            unique_values = [value for value in unique_values if search_query.lower() in value.lower()]
+
         total_count = len(unique_values)
         paginated_values = unique_values[offset:offset + limit]
+
         return Response({
             'results': paginated_values,
             'count': total_count,
