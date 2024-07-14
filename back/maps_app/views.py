@@ -185,7 +185,7 @@ class MapLayerViewSet(ModelViewSet):
         serializer = MapLayerPropertiesSerializer(unique_keys, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['get'], url_path='property-values-int')
+    @action(detail=True, methods=['get'], url_path='property-values-integer')
     def property_values_int(self, request, pk=None):
         return self._get_property_values(request, pk, int)
 
