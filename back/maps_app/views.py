@@ -5,14 +5,14 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from geosight.utils.ModelViewSet import ModelViewSet
-from maps_app.models import Map, MapLayer, MapStyle, CreateScoringMapLayerTask, Feature, ScoringConfiguration
+from maps_app.models import Map, MapLayer, MapStyle, CreateScoringMapLayerTask, Feature, ScoringConfiguration, MapLayerFilter
 from maps_app.serializers.map_layers_serializers import MapLayerSerializer, MapLayerListSerializer, \
     MapLayerCreateSerializer, MapLayerUpdateSerializer, MapLayerScoringCreateSerializer, MapLayerPropertiesSerializer, \
     MapLayerUpdateLineStylesSerializer, MapLayerUpdatePointStylesSerializer, MapLayerUpdatePolygonStylesSerializer
 from maps_app.serializers.map_serializers import MapSerializer, MapListSerializer, MapCreateSerializer, \
     MapUpdateSerializer, MapShareSerializer, MapShowSerializer
 from maps_app.serializers.map_layer_filter_serializers import MapLayerFilterListLayerSerializer, \
-    MapLayerFilterCreateSerializer
+    MapLayerFilterCreateSerializer, MapLayerFilterUpdateSerializer
 from users_app.permissions import IsUser, IsManager, IsSuperUser
 
 from .serializers.map_style_seralizers import MapStyleSerializer
@@ -300,6 +300,29 @@ class MapLayerViewSet(ModelViewSet):
             serializer.save(map_layer=map_layer)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['delete'], url_path='filters/(?P<filter_id>[^/.]+)')
+    def delete_filter(self, request, pk=None, filter_id=None):
+        map_layer = self.get_object()
+        try:
+            filter_instance = MapLayerFilter.objects.get(map_layer=map_layer, id=filter_id)
+            filter_instance.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except MapLayerFilter.DoesNotExist:
+            return Response({"detail": "Фильтр не найден."}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=True, methods=['put'], url_path='filters/(?P<filter_id>[^/.]+)')
+    def edit_filter(self, request, pk=None, filter_id=None):
+        map_layer = self.get_object()
+        try:
+            filter_instance = MapLayerFilter.objects.get(map_layer=map_layer, id=filter_id)
+            serializer = MapLayerFilterUpdateSerializer(filter_instance, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except MapLayerFilter.DoesNotExist:
+            return Response({"detail": "Фильтр не найден."}, status=status.HTTP_404_NOT_FOUND)
 
 class MapStyleViewSet(ModelViewSet):
     queryset = MapStyle.objects.all()

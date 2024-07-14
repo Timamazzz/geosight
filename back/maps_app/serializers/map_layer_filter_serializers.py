@@ -16,3 +16,8 @@ class MapLayerFilterListLayerSerializer(serializers.ModelSerializer):
     class Meta:
         model = MapLayerFilter
         fields = '__all__'
+
+class MapLayerFilterUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MapLayerFilter
+        fields = '__all__'
