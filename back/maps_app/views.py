@@ -11,7 +11,10 @@ from maps_app.serializers.map_layers_serializers import MapLayerSerializer, MapL
     MapLayerUpdateLineStylesSerializer, MapLayerUpdatePointStylesSerializer, MapLayerUpdatePolygonStylesSerializer
 from maps_app.serializers.map_serializers import MapSerializer, MapListSerializer, MapCreateSerializer, \
     MapUpdateSerializer, MapShareSerializer, MapShowSerializer
+from maps_app.serializers.map_layer_filter_serializers import MapLayerFilterListLayerSerializer, \
+    MapLayerFilterCreateSerializer
 from users_app.permissions import IsUser, IsManager, IsSuperUser
+
 from .serializers.map_style_seralizers import MapStyleSerializer
 from .tasks import create_features, create_scoring_features
 
@@ -79,6 +82,8 @@ class MapLayerViewSet(ModelViewSet):
         'line': MapLayerUpdateLineStylesSerializer,
         'point': MapLayerUpdatePointStylesSerializer,
         'polygon': MapLayerUpdatePolygonStylesSerializer,
+        'filters': MapLayerFilterListLayerSerializer,
+        'filter-create': MapLayerFilterCreateSerializer
     }
 
     def get_queryset(self):
@@ -180,8 +185,19 @@ class MapLayerViewSet(ModelViewSet):
         serializer = MapLayerPropertiesSerializer(unique_keys, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['get'], url_path='property-values')
-    def property_values(self, request, pk=None):
+    @action(detail=True, methods=['get'], url_path='property-values-int')
+    def property_values_int(self, request, pk=None):
+        return self._get_property_values(request, pk, int)
+
+    @action(detail=True, methods=['get'], url_path='property-values-float')
+    def property_values_float(self, request, pk=None):
+        return self._get_property_values(request, pk, float)
+
+    @action(detail=True, methods=['get'], url_path='property-values-string')
+    def property_values_string(self, request, pk=None):
+        return self._get_property_values(request, pk, str)
+
+    def _get_property_values(self, request, pk, expected_type):
         map_layer = self.get_object()
         property_name = request.query_params.get('property_name')
 
@@ -197,43 +213,47 @@ class MapLayerViewSet(ModelViewSet):
 
         sample_value = features.first()
 
-        if isinstance(sample_value, (int, float)):
-            features_casted = None
-            if isinstance(sample_value, int):
-                features_casted = features.annotate(
-                    property_value_casted=Cast(F(f'properties__{property_name}'), output_field=BigIntegerField())
-                )
-            elif isinstance(sample_value, float):
-                features_casted = features.annotate(
-                    property_value_casted=Cast(F(f'properties__{property_name}'), output_field=FloatField())
-                )
-            if features_casted:
-                min_value = features_casted.aggregate(min_value=Min('property_value_casted'))['min_value']
-                max_value = features_casted.aggregate(max_value=Max('property_value_casted'))['max_value']
-                return Response({
-                    'min_value': min_value,
-                    'max_value': max_value,
-                }, status=status.HTTP_200_OK)
-            else:
-                return Response({
-                    'error': "Ошибка при аннотации данных."
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        elif isinstance(sample_value, str):
-            limit = int(request.query_params.get('limit', 10))
-            offset = int(request.query_params.get('offset', 0))
-            unique_values = list(set(features))
-            total_count = len(unique_values)
-            paginated_values = unique_values[offset:offset + limit]
-            return Response({
-                'results': paginated_values,
-                'count': total_count,
-                'limit': limit,
-                'offset': offset,
-            }, status=status.HTTP_200_OK)
-
+        if isinstance(sample_value, expected_type):
+            if expected_type in [int, float]:
+                return self._get_numeric_property_values(features, sample_value, property_name)
+            elif expected_type == str:
+                return self._get_string_property_values(features, request)
         else:
-            return Response({"detail": "Unsupported field type."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": f"Property '{property_name}' is not of type {expected_type.__name__}."},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+    def _get_numeric_property_values(self, features, sample_value, property_name):
+        features_casted = None
+        if isinstance(sample_value, int):
+            features_casted = features.annotate(
+                property_value_casted=Cast(F(f'properties__{property_name}'), output_field=BigIntegerField())
+            )
+        elif isinstance(sample_value, float):
+            features_casted = features.annotate(
+                property_value_casted=Cast(F(f'properties__{property_name}'), output_field=FloatField())
+            )
+        if features_casted:
+            min_value = features_casted.aggregate(min_value=Min('property_value_casted'))['min_value']
+            max_value = features_casted.aggregate(max_value=Max('property_value_casted'))['max_value']
+            return Response({
+                'min_value': min_value,
+                'max_value': max_value,
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({"error": "Ошибка при аннотации данных."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def _get_string_property_values(self, features, request):
+        limit = int(request.query_params.get('limit', 10))
+        offset = int(request.query_params.get('offset', 0))
+        unique_values = list(set(features))
+        total_count = len(unique_values)
+        paginated_values = unique_values[offset:offset + limit]
+        return Response({
+            'results': paginated_values,
+            'count': total_count,
+            'limit': limit,
+            'offset': offset,
+        }, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['put'])
     def line(self, request, pk=None):
@@ -259,6 +279,21 @@ class MapLayerViewSet(ModelViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=['get'], url_path='filters')
+    def list_filters(self, request, pk=None):
+        map_layer = self.get_object()
+        filters = MapLayerFilterListLayerSerializer.objects.filter(map_layer=map_layer)
+        serializer = MapLayerFilterListLayerSerializer(filters, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='filters')
+    def create_filter(self, request, pk=None):
+        map_layer = self.get_object()
+        serializer = MapLayerFilterCreateSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(map_layer=map_layer)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class MapStyleViewSet(ModelViewSet):
     queryset = MapStyle.objects.all()

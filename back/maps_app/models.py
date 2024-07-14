@@ -5,6 +5,7 @@ from django.contrib.gis.db import models as gis_models
 from users_app.models import Company, User
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.contrib.postgres.fields import ArrayField
 
 
 def generate_random_color():
@@ -238,3 +239,24 @@ class CreateScoringMapLayerTask(models.Model):
     class Meta:
         verbose_name = "Задача создания слоя карты"
         verbose_name_plural = "Задачи создания слоев карт"
+
+
+class MapLayerFilter(models.Model):
+    map_layer = models.ForeignKey(MapLayer, on_delete=models.CASCADE, related_name='filters', verbose_name="Слой карты")
+    field_name = models.CharField(max_length=256, verbose_name="Имя поля")
+
+    # Для int и float полей
+    min_value_int = models.BigIntegerField(null=True, blank=True, verbose_name="Минимальное значение (int)")
+    max_value_int = models.BigIntegerField(null=True, blank=True, verbose_name="Максимальное значение (int)")
+    min_value_float = models.FloatField(null=True, blank=True, verbose_name="Минимальное значение (float)")
+    max_value_float = models.FloatField(null=True, blank=True, verbose_name="Максимальное значение (float)")
+
+    # Для string полей
+    string_values = ArrayField(models.CharField(max_length=256), blank=True, default=list, verbose_name="Значения (строки)")
+
+    def __str__(self):
+        return f'{self.map_layer.name} - {self.field_name}'
+
+    class Meta:
+        verbose_name = "Фильтр слоя карты"
+        verbose_name_plural = "Фильтры слоев карт"
