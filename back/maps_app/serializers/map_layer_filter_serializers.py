@@ -10,7 +10,7 @@ class MapLayerFilterSerializer(serializers.ModelSerializer):
 class MapLayerFilterCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = MapLayerFilter
-        fields = '__all__'
+        exclude = ('id',)
 
 class MapLayerFilterListLayerSerializer(serializers.ModelSerializer):
     class Meta:
