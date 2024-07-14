@@ -249,7 +249,7 @@ class MapLayerViewSet(ModelViewSet):
 
         unique_values = list(set(features))
         if search_query:
-            unique_values = [value for value in unique_values if search_query.lower() in value.lower()]
+            unique_values = [value for value in unique_values if value and search_query.lower() in value.lower()]
 
         total_count = len(unique_values)
         paginated_values = unique_values[offset:offset + limit]
