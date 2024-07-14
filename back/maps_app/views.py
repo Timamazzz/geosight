@@ -83,7 +83,8 @@ class MapLayerViewSet(ModelViewSet):
         'point': MapLayerUpdatePointStylesSerializer,
         'polygon': MapLayerUpdatePolygonStylesSerializer,
         'filters': MapLayerFilterListLayerSerializer,
-        'filter-create': MapLayerFilterCreateSerializer
+        'filter-create': MapLayerFilterCreateSerializer,
+        'filter-update': MapLayerFilterUpdateSerializer,
     }
 
     def get_queryset(self):
