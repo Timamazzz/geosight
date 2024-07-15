@@ -52,3 +52,8 @@ class MapAllowedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Map
         fields = ('id', 'name', 'description')
+
+class MapStyleUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Map
+        fields = ('id', 'style')
