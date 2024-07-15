@@ -5,7 +5,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from geosight.utils.ModelViewSet import ModelViewSet
-from maps_app.models import Map, MapLayer, MapStyle, CreateScoringMapLayerTask, Feature, ScoringConfiguration, MapLayerFilter
+from maps_app.models import Map, MapLayer, MapStyle, CreateScoringMapLayerTask, Feature, ScoringConfiguration, \
+    MapLayerFilter
 from maps_app.serializers.map_layers_serializers import MapLayerSerializer, MapLayerListSerializer, \
     MapLayerCreateSerializer, MapLayerUpdateSerializer, MapLayerScoringCreateSerializer, MapLayerPropertiesSerializer, \
     MapLayerUpdateLineStylesSerializer, MapLayerUpdatePointStylesSerializer, MapLayerUpdatePolygonStylesSerializer
@@ -86,6 +87,7 @@ class MapViewSet(ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class MapLayerViewSet(ModelViewSet):
     queryset = MapLayer.objects.all()
@@ -341,6 +343,7 @@ class MapLayerViewSet(ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except MapLayerFilter.DoesNotExist:
             return Response({"detail": "Фильтр не найден."}, status=status.HTTP_404_NOT_FOUND)
+
 
 class MapStyleViewSet(ModelViewSet):
     queryset = MapStyle.objects.all()

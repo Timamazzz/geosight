@@ -51,7 +51,8 @@ class MapShowSerializer(WritableNestedModelSerializer):
 class MapAllowedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Map
-        fields = ('id', 'name', 'description')
+        fields = ('id', 'name', 'description', 'updated_at')
+
 
 class MapStyleUpdateSerializer(serializers.ModelSerializer):
     class Meta:
