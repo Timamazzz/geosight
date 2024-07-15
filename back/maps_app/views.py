@@ -15,6 +15,7 @@ from maps_app.serializers.map_layer_filter_serializers import MapLayerFilterList
     MapLayerFilterCreateSerializer, MapLayerFilterUpdateSerializer
 from users_app.permissions import IsUser, IsManager, IsSuperUser
 
+from .serializers.map_serializers import MapAllowedSerializer
 from .serializers.map_style_seralizers import MapStyleSerializer
 from .tasks import create_features, create_scoring_features
 
@@ -69,6 +70,12 @@ class MapViewSet(ModelViewSet):
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
+    @action(methods=['get'], detail=False)
+    def allowed(self, request):
+        user = request.user
+        allowed_maps = Map.objects.filter(users=user)
+        serializer = MapAllowedSerializer(allowed_maps, many=True)
+        return Response(serializer.data)
 
 class MapLayerViewSet(ModelViewSet):
     queryset = MapLayer.objects.all()
