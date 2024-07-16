@@ -65,7 +65,7 @@ class Command(BaseCommand):
                 INTO bounds
                 FROM maps_app_feature;
 
-                EXECUTE 'COMMENT ON FUNCTION get_features(integer, integer, integer, json) IS $tj$' || $$
+                EXECUTE 'COMMENT ON FUNCTION get_features IS $tj$' || $$
                 {
                     "tilejson": "3.0.0",
                     "tiles": [
