@@ -20,38 +20,42 @@ class Command(BaseCommand):
         }
 
         create_function = """
-               CREATE OR REPLACE FUNCTION get_features(z integer, x integer, y integer, query_params json)
-               RETURNS bytea AS $$
-               DECLARE
-                   mvt bytea;
-                   map_layer integer;
-               BEGIN
-                   map_layer := (query_params->>'map_layer')::integer;
+            CREATE OR REPLACE FUNCTION get_features(z integer, x integer, y integer, query_params json)
+            RETURNS bytea AS $$
+            DECLARE
+                mvt bytea;
+                map_layer integer;
+            BEGIN
+                map_layer := (query_params->>'map_layer')::integer;
 
-                   SELECT INTO mvt ST_AsMVT(tile, 'get_features', 4096, 'geometry') FROM (
-                       SELECT
-                           ST_AsMVTGeom(
-                               ST_Transform(ST_CurveToLine(geometry), 3857),
-                               ST_TileEnvelope(z, x, y),
-                               4096, 64, true
-                           ) AS geometry,
-                           jsonb_build_object(
-                                'map_layer_id', map_layer_id,
-                                'info', to_json(properties)
-                                'id', id,
-                                'type', type
-                            ) AS properties
-                       FROM maps_app_feature
-                       WHERE map_layer_id = map_layer AND
-                             geometry && ST_Transform(ST_TileEnvelope(z, x, y), 4326)
-                   ) AS tile WHERE geometry IS NOT NULL;
+                SELECT INTO mvt ST_AsMVT(tile, 'get_features', 4096, 'geometry') FROM (
+                    SELECT
+                        ST_AsMVTGeom(
+                            ST_Transform(ST_CurveToLine(geometry), 3857),
+                            ST_TileEnvelope(z, x, y),
+                            4096, 64, true
+                        ) AS geometry,
+                        jsonb_build_object(
+                            'map_layer_id', map_layer_id,
+                            'id', id,
+                            'type', type,
+                            'info', (
+                                SELECT jsonb_build_object(
+                                    'properties', properties
+                                )
+                                FROM maps_app_feature
+                                WHERE id = tile.id -- Подставляем ID объекта для получения свойств
+                            )
+                        ) AS properties
+                    FROM maps_app_feature AS tile
+                    WHERE map_layer_id = map_layer AND
+                          geometry && ST_Transform(ST_TileEnvelope(z, x, y), 4326)
+                ) AS tile WHERE geometry IS NOT NULL;
 
-                   RETURN mvt;
-               END
-               $$ LANGUAGE plpgsql IMMUTABLE STRICT PARALLEL SAFE;
-               """
-
-
+                RETURN mvt;
+            END
+            $$ LANGUAGE plpgsql IMMUTABLE STRICT PARALLEL SAFE;
+        """
 
         try:
             conn = psycopg2.connect(**conn_params)
