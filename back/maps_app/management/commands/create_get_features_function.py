@@ -10,17 +10,6 @@ load_dotenv()
 class Command(BaseCommand):
     help = 'Creates or replaces the get_features function in PostgreSQL'
 
-    def get_bounds(self, cursor):
-        # Функция для вычисления границ геометрий в таблице maps_app_feature
-        cursor.execute("""
-            SELECT ST_AsGeoJSON(ST_Extent(geometry))::json->'coordinates'
-            FROM maps_app_feature
-        """)
-        result = cursor.fetchone()
-        if result:
-            return result[0]
-        return None
-
     def handle(self, *args, **options):
         conn_params = {
             'dbname': os.getenv('DB_NAME', settings.DATABASES['default']['NAME']),
@@ -31,71 +20,43 @@ class Command(BaseCommand):
         }
 
         create_function = """
-        CREATE OR REPLACE FUNCTION get_features(z integer, x integer, y integer, query_params json)
-        RETURNS bytea AS $$
-        DECLARE
-            mvt bytea;
-            map_layer integer;
-        BEGIN
-            map_layer := (query_params->>'map_layer')::integer;
+               CREATE OR REPLACE FUNCTION get_features(z integer, x integer, y integer, query_params json)
+               RETURNS bytea AS $$
+               DECLARE
+                   mvt bytea;
+                   map_layer integer;
+               BEGIN
+                   map_layer := (query_params->>'map_layer')::integer;
 
-            SELECT INTO mvt ST_AsMVT(tile, 'get_features', 4096, 'geometry') FROM (
-                SELECT
-                    ST_AsMVTGeom(
-                        ST_Transform(ST_CurveToLine(geometry), 3857),
-                        ST_TileEnvelope(z, x, y),
-                        4096, 64, true
-                    ) AS geometry
-                FROM maps_app_feature
-                WHERE map_layer_id = map_layer AND
-                      geometry && ST_Transform(ST_TileEnvelope(z, x, y), 4326)
-            ) AS tile WHERE geometry IS NOT NULL;
+                   SELECT INTO mvt ST_AsMVT(tile, 'get_features', 4096, 'geometry') FROM (
+                       SELECT
+                           ST_AsMVTGeom(
+                               ST_Transform(ST_CurveToLine(geometry), 3857),
+                               ST_TileEnvelope(z, x, y),
+                               4096, 64, true
+                           ) AS geometry,
+                           jsonb_build_object(
+                               'map_layer_id', map_layer_id,
+                               'properties', properties,
+                               'id', id,
+                               'type', type
+                           ) AS properties -- Включаем свойства в тайл
+                       FROM maps_app_feature
+                       WHERE map_layer_id = map_layer AND
+                             geometry && ST_Transform(ST_TileEnvelope(z, x, y), 4326)
+                   ) AS tile WHERE geometry IS NOT NULL;
 
-            RETURN mvt;
-        END
-        $$ LANGUAGE plpgsql IMMUTABLE STRICT PARALLEL SAFE;
-        """
+                   RETURN mvt;
+               END
+               $$ LANGUAGE plpgsql IMMUTABLE STRICT PARALLEL SAFE;
+               """
 
-        add_tilejson_comment = """
-        DO $do$ BEGIN
-            DECLARE
-                bounds json;
-            BEGIN
-                SELECT ST_AsGeoJSON(ST_Extent(geometry))::json->'coordinates'
-                INTO bounds
-                FROM maps_app_feature;
 
-                EXECUTE 'COMMENT ON FUNCTION get_features IS $tj$' || $$
-                {
-                    "tilejson": "3.0.0",
-                    "tiles": [
-                        "https://app.geosight.ru/get_features/{z}/{x}/{y}"
-                    ],
-                    "vector_layers": [
-                        {
-                            "id": "maps_app_feature",
-                            "fields": {
-                                "map_layer_id": "int8",
-                                "properties": "jsonb",
-                                "id": "int8",
-                                "type": "varchar"
-                            }
-                        }
-                    ],
-                    "bounds": bounds,
-                    "description": "public.get_features",
-                    "name": "get_features"
-                }
-                $$::json || '$tj$';
-            END;
-        END $do$;
-        """
 
         try:
             conn = psycopg2.connect(**conn_params)
             with conn.cursor() as cursor:
                 cursor.execute(create_function)
-                cursor.execute(add_tilejson_comment)
             conn.commit()
             self.stdout.write(self.style.SUCCESS("Function created or replaced successfully"))
         except Exception as e:
