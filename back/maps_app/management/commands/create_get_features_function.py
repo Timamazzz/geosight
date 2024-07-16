@@ -35,9 +35,9 @@ class Command(BaseCommand):
                                ST_TileEnvelope(z, x, y),
                                4096, 64, true
                            ) AS geometry,
-                           to_json(
+                           jsonb_build_object(
                                 'map_layer_id', map_layer_id,
-                                'info', properties::json, 
+                                'info', to_json(properties)
                                 'id', id,
                                 'type', type
                             ) AS properties
