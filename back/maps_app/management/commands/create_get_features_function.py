@@ -10,6 +10,17 @@ load_dotenv()
 class Command(BaseCommand):
     help = 'Creates or replaces the get_features function in PostgreSQL'
 
+    def get_bounds(self, cursor):
+        # Функция для вычисления границ геометрий в таблице maps_app_feature
+        cursor.execute("""
+            SELECT ST_AsGeoJSON(ST_Extent(geometry))::json->'coordinates'
+            FROM maps_app_feature
+        """)
+        result = cursor.fetchone()
+        if result:
+            return result[0]
+        return None
+
     def handle(self, *args, **options):
         conn_params = {
             'dbname': os.getenv('DB_NAME', settings.DATABASES['default']['NAME']),
@@ -47,21 +58,36 @@ class Command(BaseCommand):
 
         add_tilejson_comment = """
         DO $do$ BEGIN
-            EXECUTE 'COMMENT ON FUNCTION get_features(integer, integer, integer, json) IS $tj$' || $$
-            {
-                "description": "Функция для получения векторных тайлов для карты",
-                "vector_layers": [
-                    {
-                        "id": "get_features_layer",
-                        "fields": {
-                            "type": "String",
-                            "properties": "JSON",
-                            "geometry": "Geometry"
+            DECLARE
+                bounds json;
+            BEGIN
+                SELECT ST_AsGeoJSON(ST_Extent(geometry))::json->'coordinates'
+                INTO bounds
+                FROM maps_app_feature;
+
+                EXECUTE 'COMMENT ON FUNCTION get_features(integer, integer, integer, json) IS $tj$' || $$
+                {
+                    "tilejson": "3.0.0",
+                    "tiles": [
+                        "https://app.geosight.ru/get_features/{z}/{x}/{y}"
+                    ],
+                    "vector_layers": [
+                        {
+                            "id": "maps_app_feature",
+                            "fields": {
+                                "map_layer_id": "int8",
+                                "properties": "jsonb",
+                                "id": "int8",
+                                "type": "varchar"
+                            }
                         }
-                    }
-                ]
-            }
-            $$::json || '$tj$';
+                    ],
+                    "bounds": bounds,
+                    "description": "public.get_features",
+                    "name": "get_features"
+                }
+                $$::json || '$tj$';
+            END;
         END $do$;
         """
 
