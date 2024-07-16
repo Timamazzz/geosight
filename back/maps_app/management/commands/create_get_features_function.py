@@ -31,7 +31,7 @@ class Command(BaseCommand):
             map_layer integer;
         BEGIN
             map_layer := (query_params->>'map_layer')::integer;
-        
+
             SELECT INTO mvt ST_AsMVT(tile, 'get_features', 4096, 'geometry') FROM (
                 SELECT
                     ST_AsMVTGeom(
@@ -43,18 +43,38 @@ class Command(BaseCommand):
                 WHERE map_layer_id = map_layer AND
                       geometry && ST_Transform(ST_TileEnvelope(z, x, y), 4326)
             ) AS tile WHERE geometry IS NOT NULL;
-        
+
             RETURN mvt;
         END
         $$ LANGUAGE plpgsql IMMUTABLE STRICT PARALLEL SAFE;
         """
 
+        add_tilejson_comment = """
+        DO $do$ BEGIN
+            EXECUTE 'COMMENT ON FUNCTION get_features(integer, integer, integer, json) IS $tj$' || $$
+            {
+                "description": "Функция для получения векторных тайлов для карты",
+                "vector_layers": [
+                    {
+                        "id": "get_features_layer",
+                        "fields": {
+                            "type": "String",
+                            "properties": "JSON",
+                            "geometry": "Geometry"
+                        }
+                    }
+                ]
+            }
+            $$::json || '$tj$';
+        END $do$;
+        """
 
         try:
             conn = psycopg2.connect(**conn_params)
             with conn.cursor() as cursor:
                 cursor.execute(drop_function)
                 cursor.execute(create_function)
+                cursor.execute(add_tilejson_comment)
             conn.commit()
             self.stdout.write(self.style.SUCCESS("Function created or replaced successfully"))
         except Exception as e:
