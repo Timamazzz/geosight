@@ -30,7 +30,8 @@ class MapViewSet(ModelViewSet):
         'create': MapCreateSerializer,
         'update': MapUpdateSerializer,
         'share': MapShareSerializer,
-        'show': MapShowSerializer
+        'show': MapShowSerializer,
+        'map_style': MapStyleUpdateSerializer
     }
 
     def get_permissions(self):
