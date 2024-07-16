@@ -19,10 +19,6 @@ class Command(BaseCommand):
             'port': os.getenv('DB_PORT', settings.DATABASES['default']['PORT']),
         }
 
-        drop_function = """
-        DROP FUNCTION IF EXISTS get_features(integer, integer, integer, json) CASCADE;
-        """
-
         create_function = """
         CREATE OR REPLACE FUNCTION get_features(z integer, x integer, y integer, query_params json)
         RETURNS bytea AS $$
@@ -72,7 +68,6 @@ class Command(BaseCommand):
         try:
             conn = psycopg2.connect(**conn_params)
             with conn.cursor() as cursor:
-                cursor.execute(drop_function)
                 cursor.execute(create_function)
                 cursor.execute(add_tilejson_comment)
             conn.commit()
