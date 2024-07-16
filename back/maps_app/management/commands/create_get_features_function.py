@@ -36,11 +36,11 @@ class Command(BaseCommand):
                                4096, 64, true
                            ) AS geometry,
                            jsonb_build_object(
-                               'map_layer_id', map_layer_id,
-                               'info', properties,
-                               'id', id,
-                               'type', type
-                           ) AS properties -- Включаем свойства в тайл
+                                'map_layer_id', map_layer_id,
+                                'info', properties::json, 
+                                'id', id,
+                                'type', type
+                            ) AS properties
                        FROM maps_app_feature
                        WHERE map_layer_id = map_layer AND
                              geometry && ST_Transform(ST_TileEnvelope(z, x, y), 4326)
