@@ -37,7 +37,7 @@ class Command(BaseCommand):
                            ) AS geometry,
                            jsonb_build_object(
                                'map_layer_id', map_layer_id,
-                               'properties', properties,
+                               'info', properties,
                                'id', id,
                                'type', type
                            ) AS properties -- Включаем свойства в тайл
