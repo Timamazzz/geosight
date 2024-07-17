@@ -14,7 +14,7 @@ from users_app.serializers.company_serializers import CompanyListSerializer, Com
 from users_app.serializers.reset_password_serializers import SendActivationCodeSerializer, \
     CheckActivationCodeSerializer, ResetPasswordSerializer
 from users_app.serializers.user_serializers import UserSerializer, UserRetrieveSerializer, UserUpdateSerializer, \
-    UserListSerializer, UserCreateSerializer, UserEditSerializer
+    UserListSerializer, UserCreateSerializer, UserEditSerializer, UserCardSerializer
 from post_office import mail
 
 
@@ -131,6 +131,7 @@ class UserViewSet(ModelViewSet):
         'list': UserListSerializer,
         'create': UserCreateSerializer,
         'edit': UserEditSerializer,
+        'company_users': UserCardSerializer,
     }
 
     def get_permissions(self):
@@ -196,6 +197,23 @@ class UserViewSet(ModelViewSet):
                 return Response({'error': 'Недостаточно прав доступа'}, status=status.HTTP_403_FORBIDDEN)
 
         self.perform_update(serializer)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='company_users', url_name='company_users')
+    def company_users(self, request):
+        company = request.user.company
+
+        if not company:
+            return Response({'error': 'У пользователя нет компании'}, status=status.HTTP_400_BAD_REQUEST)
+
+        queryset = User.objects.filter(company=company)
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = UserCardSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = UserCardSerializer(queryset, many=True)
         return Response(serializer.data)
 
 
