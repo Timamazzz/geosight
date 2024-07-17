@@ -68,9 +68,17 @@ class MapViewSet(ModelViewSet):
 
     @action(methods=['get'], detail=True)
     def show(self, request, *args, **kwargs):
-        instance = self.get_object()
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+        try:
+            instance = self.get_object()
+            user = request.user
+            if user.role == 'admin' or (
+                    user.role == 'manager' and user.company == instance.company) or user in instance.users.all():
+                serializer = self.get_serializer(instance)
+                return Response(serializer.data)
+            else:
+                return Response({"detail": "У вас нет доступа к этой карте."}, status=status.HTTP_403_FORBIDDEN)
+        except self.model.DoesNotExist:
+            return Response({"detail": "Карта не найдена."}, status=status.HTTP_404_NOT_FOUND)
 
     @action(methods=['get'], detail=False)
     def allowed(self, request):
@@ -88,6 +96,24 @@ class MapViewSet(ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def share(self, request, pk=None):
+        try:
+            instance = self.get_object()
+            user = request.user
+            if user.role != 'admin' and (user.role != 'manager' or user.company != instance.company):
+                return Response({'detail': 'У вас нет прав для выполнения этого действия.'},
+                                status=status.HTTP_403_FORBIDDEN)
+            serializer = MapShareSerializer(instance, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except self.model.DoesNotExist:
+            return Response({'detail': 'Карта не найдена.'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class MapLayerViewSet(ModelViewSet):
