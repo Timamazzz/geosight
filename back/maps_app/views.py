@@ -34,6 +34,14 @@ class MapViewSet(ModelViewSet):
         'map_style': MapStyleUpdateSerializer
     }
 
+    @staticmethod
+    def has_company_access(user, company):
+        if user.role == 'admin':
+            return True
+
+        if user.role == 'manager' and user.company == company:
+            return True
+
     def get_permissions(self):
         if self.action in ['list']:
             permission_classes = [IsUser]
@@ -71,8 +79,8 @@ class MapViewSet(ModelViewSet):
         try:
             instance = self.get_object()
             user = request.user
-            if user.role == 'admin' or (
-                    user.role == 'manager' and user.company == instance.company) or user in instance.users.all():
+
+            if self.has_company_access(user, instance.company) or user in instance.users.all():
                 serializer = self.get_serializer(instance)
                 return Response(serializer.data)
             else:
@@ -83,7 +91,12 @@ class MapViewSet(ModelViewSet):
     @action(methods=['get'], detail=False)
     def allowed(self, request):
         user = request.user
-        allowed_maps = Map.objects.filter(users=user)
+        if user.role == 'admin':
+            allowed_maps = Map.objects.all()
+        elif user.role == 'manager':
+            allowed_maps = Map.objects.filter(company=user.company)
+        else:
+            allowed_maps = Map.objects.filter(users=user)
         serializer = MapAllowedSerializer(allowed_maps, many=True)
         return Response(serializer.data)
 
@@ -148,7 +161,8 @@ class MapLayerViewSet(ModelViewSet):
         return queryset
 
     def get_permissions(self):
-        if self.action in ['list']:
+        if self.action in ['list', 'line', 'point', 'polygon', 'list_filters', 'create_filter', 'delete_filter',
+                           'edit_filter']:
             permission_classes = [IsUser]
         elif self.action in ['create', 'update']:
             permission_classes = [IsManager]
