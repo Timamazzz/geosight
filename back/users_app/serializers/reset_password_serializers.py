@@ -10,7 +10,11 @@ class SendActivationCodeSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True, label='Почта')
 
     def send_activation_code(self, user):
-        activation_code = ActivationCode.objects.create(user=user).code
+        activation_code_instance, created = ActivationCode.objects.update_or_create(user=user)
+        if created:
+            activation_code = activation_code_instance.code
+        else:
+            activation_code = activation_code_instance.regenerate_code
 
         subject = 'Код подтверждения'
         message = f'Ваш код подтверждения: {activation_code}'
@@ -34,7 +38,8 @@ class CheckActivationCodeSerializer(serializers.Serializer):
 class ResetPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True, label='Почта')
     code = serializers.CharField(max_length=4, required=True, label='Код подтверждения')
-    password = serializers.CharField(write_only=True, validators=[validate_password], required=True, label='Новый пароль')
+    password = serializers.CharField(write_only=True, validators=[validate_password], required=True,
+                                     label='Новый пароль')
     password_confirm = serializers.CharField(write_only=True, required=True, label='Введите новый пароль еще раз')
 
     def validate(self, data):

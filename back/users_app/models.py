@@ -82,3 +82,10 @@ class ActivationCode(models.Model):
     def is_expired(self):
         expiration_time = self.created_at + timezone.timedelta(hours=3)
         return timezone.now() > expiration_time
+
+    @property
+    def regenerate_code(self):
+        self.code = generate_activation_code()
+        self.created_at = timezone.now()
+        self.save()
+        return self.code
