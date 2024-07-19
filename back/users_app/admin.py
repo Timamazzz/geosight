@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Company
+from .models import User, Company, ActivationCode
 
 
 @admin.register(User)
@@ -29,3 +29,8 @@ class CustomUserAdmin(UserAdmin):
 class CompanyAdmin(admin.ModelAdmin):
     list_display = ['name']
     search_fields = ['name']
+
+
+@admin.register(ActivationCode)
+class ActivationCodeAdmin(admin.ModelAdmin):
+    list_display = ['user', 'code', 'created_at', 'is_expired']
