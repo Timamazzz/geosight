@@ -39,7 +39,11 @@ def create_features(map_layer_id, file_name, file_contents):
 
 @shared_task(name="create_scoring_features")
 def create_scoring_features(map_layer_id, poi_data, polygon_radius):
+    print('map_layer_id create_scoring_features:', map_layer_id)
+    print('poi_data create_scoring_features:', polygon_radius)
+    print('polygon_radius create_scoring_features:', polygon_radius)
     instance = MapLayer.objects.get(id=map_layer_id)
+    print('create_scoring_features', instance)
     task = CreateScoringMapLayerTask.objects.get(layer=instance)
     try:
         print(f'Processing layer: {instance.name}')
