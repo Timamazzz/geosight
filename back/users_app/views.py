@@ -18,7 +18,7 @@ from post_office import mail
 
 from users_app.permissions import IsStaff, IsSuperUser, IsManager, IsAdmin
 
-from utils import is_manager_of_company
+from users_app.utils import has_company_access
 
 
 class BaseResetPasswordView(generics.CreateAPIView):
@@ -204,7 +204,7 @@ class UserViewSet(ModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         instance = self.get_object()
 
-        if not (is_manager_of_company(request.user, instance.company) or request.user == instance):
+        if not (has_company_access(request.user, instance.company) or request.user == instance):
             return Response({'error': 'Недостаточно прав доступа'}, status=status.HTTP_403_FORBIDDEN)
 
         serializer = self.get_serializer(instance)
@@ -213,7 +213,7 @@ class UserViewSet(ModelViewSet):
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
 
-        if not (is_manager_of_company(request.user, instance.company) or request.user == instance):
+        if not (has_company_access(request.user, instance.company) or request.user == instance):
             return Response({'error': 'Недостаточно прав доступа'}, status=status.HTTP_403_FORBIDDEN)
 
         serializer = self.get_serializer(instance, data=request.data, partial=True)
