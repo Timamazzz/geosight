@@ -169,9 +169,9 @@ def process_scoring_features(layer_id, task, poi_data, polygon_radius):
 
     active_poi_data = [poi for poi in poi_data if poi.get('is_active', False)]
     poi_list = {
-        poi.name: {
-            'max-score': poi.max_score,
-            'max-distance': poi.max_distance
+        poi['name']: {
+            'max-score': poi['max_score'],
+            'max-distance': poi['max_distance']
         }
         for poi in active_poi_data
     }
