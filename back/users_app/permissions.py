@@ -13,13 +13,6 @@ class UserRolePermission(permissions.BasePermission):
         return bool(request.user and request.user.is_authenticated and request.user.role in self.allowed_roles)
 
 
-class IsUser(UserRolePermission):
-    """
-    Разрешение для пользователя
-    """
-    allowed_roles = ['user', 'staff', 'manager', 'admin']
-
-
 class IsStaff(UserRolePermission):
     """
     Разрешение для сотрудника

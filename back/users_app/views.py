@@ -8,7 +8,6 @@ from geosight import settings
 from geosight.utils.ModelViewSet import ModelViewSet
 from geosight.utils.OptionsMetadata import OptionsMetadata
 from users_app.models import User, ActivationCode, Company
-from users_app.permissions import IsUser, IsSuperUser, IsManager, IsAdmin
 from users_app.serializers.company_serializers import CompanyListSerializer, CompanyCreateSerializer, \
     CompanyRetrieveSerializer, CompanyUpdateSerializer, CompanySerializer
 from users_app.serializers.reset_password_serializers import SendActivationCodeSerializer, \
@@ -16,6 +15,10 @@ from users_app.serializers.reset_password_serializers import SendActivationCodeS
 from users_app.serializers.user_serializers import UserSerializer, UserRetrieveSerializer, UserUpdateSerializer, \
     UserListSerializer, UserCreateSerializer, UserEditSerializer, UserCardSerializer
 from post_office import mail
+
+from users_app.permissions import IsStaff, IsSuperUser, IsManager, IsAdmin
+
+from users_app.utils import is_manager_of_company
 
 
 class BaseResetPasswordView(generics.CreateAPIView):
@@ -131,12 +134,11 @@ class UserViewSet(ModelViewSet):
         'list': UserListSerializer,
         'create': UserCreateSerializer,
         'edit': UserEditSerializer,
-        'company_users': UserCardSerializer,
     }
 
     def get_permissions(self):
         if self.action in ['retrieve', 'update']:
-            permission_classes = [IsUser]
+            permission_classes = [IsStaff]
         elif self.action in ['list', 'create', 'edit']:
             permission_classes = [IsManager]
         else:
@@ -199,21 +201,25 @@ class UserViewSet(ModelViewSet):
         self.perform_update(serializer)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['get'], url_path='company_users', url_name='company_users')
-    def company_users(self, request):
-        company = request.user.company
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
 
-        if not company:
-            return Response({'error': 'У пользователя нет компании'}, status=status.HTTP_400_BAD_REQUEST)
+        if not (is_manager_of_company(request.user, instance.company) or request.user == instance):
+            return Response({'error': 'Недостаточно прав доступа'}, status=status.HTTP_403_FORBIDDEN)
 
-        queryset = User.objects.filter(company=company)
-        page = self.paginate_queryset(queryset)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
-        if page is not None:
-            serializer = UserCardSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
 
-        serializer = UserCardSerializer(queryset, many=True)
+        if not (is_manager_of_company(request.user, instance.company) or request.user == instance):
+            return Response({'error': 'Недостаточно прав доступа'}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        self.perform_update(serializer)
         return Response(serializer.data)
 
 

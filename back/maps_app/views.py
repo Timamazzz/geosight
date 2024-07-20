@@ -14,11 +14,12 @@ from maps_app.serializers.map_serializers import MapSerializer, MapListSerialize
     MapUpdateSerializer, MapShareSerializer, MapShowSerializer
 from maps_app.serializers.map_layer_filter_serializers import MapLayerFilterListLayerSerializer, \
     MapLayerFilterCreateSerializer, MapLayerFilterUpdateSerializer
-from users_app.permissions import IsUser, IsManager, IsSuperUser
+from users_app.permissions import IsStaff, IsManager, IsSuperUser
 
 from .serializers.map_serializers import MapAllowedSerializer, MapStyleUpdateSerializer
 from .serializers.map_style_seralizers import MapStyleSerializer
 from .tasks import create_features, create_scoring_features
+from users_app.utils import has_company_access
 
 
 # Create your views here.
@@ -34,18 +35,10 @@ class MapViewSet(ModelViewSet):
         'map_style': MapStyleUpdateSerializer
     }
 
-    @staticmethod
-    def has_company_access(user, company):
-        if user.role == 'admin':
-            return True
-
-        if user.role == 'manager' and user.company == company:
-            return True
-
     def get_permissions(self):
-        if self.action in ['list']:
-            permission_classes = [IsUser]
-        elif self.action in ['create', 'update']:
+        if self.action in ['show', 'map_style', 'allowed']:
+            permission_classes = [IsStaff]
+        elif self.action in ['create', 'update', 'list']:
             permission_classes = [IsManager]
         else:
             permission_classes = [IsSuperUser]
@@ -68,9 +61,8 @@ class MapViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
-        company = user.company
-        if company:
-            serializer.save(company=company)
+        if user.company:
+            serializer.save(company=user.company, creator=user, style=MapStyle.objects.all().first())
         else:
             return Response('У пользователя нет компании', status=status.HTTP_400_BAD_REQUEST)
 
@@ -80,7 +72,7 @@ class MapViewSet(ModelViewSet):
             instance = self.get_object()
             user = request.user
 
-            if self.has_company_access(user, instance.company) or user in instance.users.all():
+            if has_company_access(user, instance.company) or user in instance.users.all():
                 serializer = self.get_serializer(instance)
                 return Response(serializer.data)
             else:
@@ -103,30 +95,14 @@ class MapViewSet(ModelViewSet):
     @action(methods=['put'], detail=True)
     def map_style(self, request, pk=None):
         map_instance = self.get_object()
-        serializer = MapStyleUpdateSerializer(map_instance, data=request.data, partial=True)
-
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @action(detail=True, methods=['post'])
-    def share(self, request, pk=None):
-        try:
-            instance = self.get_object()
-            user = request.user
-            if user.role != 'admin' and (user.role != 'manager' or user.company != instance.company):
-                return Response({'detail': 'У вас нет прав для выполнения этого действия.'},
-                                status=status.HTTP_403_FORBIDDEN)
-            serializer = MapShareSerializer(instance, data=request.data, partial=True)
+        if has_company_access(request.user, map_instance.company) or request.user in map_instance.users.all():
+            serializer = MapStyleUpdateSerializer(map_instance, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
-                return Response(serializer.data)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-        except self.model.DoesNotExist:
-            return Response({'detail': 'Карта не найдена.'}, status=status.HTTP_404_NOT_FOUND)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"detail": "У вас нет доступа к этой карте."}, status=status.HTTP_403_FORBIDDEN)
 
 
 class MapLayerViewSet(ModelViewSet):
@@ -161,9 +137,8 @@ class MapLayerViewSet(ModelViewSet):
         return queryset
 
     def get_permissions(self):
-        if self.action in ['list', 'line', 'point', 'polygon', 'list_filters', 'create_filter', 'delete_filter',
-                           'edit_filter']:
-            permission_classes = [IsUser]
+        if self.action in ['line', 'point', 'polygon', 'list_filters', 'create_filter', 'delete_filter', 'edit_filter']:
+            permission_classes = [IsStaff]
         elif self.action in ['create', 'update']:
             permission_classes = [IsManager]
         else:
@@ -322,6 +297,7 @@ class MapLayerViewSet(ModelViewSet):
             'offset': offset,
         }, status=status.HTTP_200_OK)
 
+    # Чтобы нормально настроить права для методов редактирования стилей, нужно перенести их в viewset map, так как мы не знаем из какой карты мы вызываем эти методы
     @action(detail=True, methods=['put'])
     def line(self, request, pk=None):
         map_layer = self.get_object()
@@ -346,6 +322,7 @@ class MapLayerViewSet(ModelViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    # Фильтрация привязано к слою, но так же не учитывает карты, а значит из какой бы карты не был бы создан фильтр для слоя, он появиться и будет применен для каждой карты, нужно добавить ссылку на карту! Так же стоит перенести во ViwSet Карт!
     @action(detail=True, methods=['get'], url_path='filters')
     def list_filters(self, request, pk=None):
         map_layer = self.get_object()

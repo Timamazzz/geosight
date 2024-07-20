@@ -1,10 +1,10 @@
 {
   "files": {
-    "main.css": "/static/css/main.d464d798.css",
-    "main.js": "/static/js/main.22d35581.js",
+    "main.css": "/static/css/main.908de65c.css",
+    "main.js": "/static/js/main.5c545617.js",
     "static/media/bgImg.png": "/static/media/bgImg.5995ced519a8947215ef.png",
-    "static/media/Inter-italic.var.woff2?v=3.19": "/static/media/Inter-italic.var.30807be7abc48ba8c73c.woff2",
-    "static/media/Inter-roman.var.woff2?v=3.19": "/static/media/Inter-roman.var.ba4caefcdf5b36b438db.woff2",
+    "static/media/Inter-italic.var.woff2?v=3.19": "/static/media/Inter-italic.var.184ec460d45b3caf5b0b.woff2",
+    "static/media/Inter-roman.var.woff2?v=3.19": "/static/media/Inter-roman.var.71b058b66381db72226b.woff2",
     "static/media/bgImgSmall.png": "/static/media/bgImgSmall.a7aaeb152cba63be4fee.png",
     "static/media/previ.svg": "/static/media/previ.006944a308c77e0c75c99ae046caf9f8.svg",
     "static/media/golos-text_vf.woff": "/static/media/golos-text_vf.119e7f3bec340d7b0ae6.woff",
@@ -82,11 +82,11 @@
     "static/media/Checkmark.svg": "/static/media/Checkmark.caa874a231fb2d98c1b2543138e9ed77.svg",
     "static/media/minus.svg": "/static/media/minus.737f7226e2fba6df5bf3603d1a70d627.svg",
     "static/media/xClose.svg": "/static/media/xClose.62da8d58530b5056e91b9761c750c80b.svg",
-    "main.d464d798.css.map": "/static/css/main.d464d798.css.map",
-    "main.22d35581.js.map": "/static/js/main.22d35581.js.map"
+    "main.908de65c.css.map": "/static/css/main.908de65c.css.map",
+    "main.5c545617.js.map": "/static/js/main.5c545617.js.map"
   },
   "entrypoints": [
-    "static/css/main.d464d798.css",
-    "static/js/main.22d35581.js"
+    "static/css/main.908de65c.css",
+    "static/js/main.5c545617.js"
   ]
 }
