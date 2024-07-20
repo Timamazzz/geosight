@@ -75,6 +75,7 @@ class UserEditSerializer(serializers.ModelSerializer):
 
 
 class UserCardSerializer(WritableNestedModelSerializer):
+    avatar = serializers.CharField()
 
     class Meta:
         model = User
