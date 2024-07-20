@@ -18,7 +18,7 @@ from post_office import mail
 
 from users_app.permissions import IsStaff, IsSuperUser, IsManager, IsAdmin
 
-from users_app.utils import is_manager_of_company
+from utils import is_manager_of_company
 
 
 class BaseResetPasswordView(generics.CreateAPIView):
