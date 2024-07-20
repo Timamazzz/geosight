@@ -154,8 +154,8 @@ class MapViewSet(ModelViewSet):
     @action(methods=['post'], detail=True, url_path='sign-allowed-users')
     def sign_allowed_users(self, request, pk=None):
         map_instance = self.get_object()
-        user_id = request.data.get('user')
-        map_url = request.data.get('map_url')
+        user_id = request.query_params.get('user')
+        map_url = request.query_params.get('map_url')
         try:
             new_allowed_user = User.objects.get(id=user_id)
         except User.DoesNotExist:
