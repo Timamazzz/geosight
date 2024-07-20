@@ -72,9 +72,8 @@ class POIConfigInline(admin.TabularInline):
 
 @admin.register(POIConfig)
 class POIConfigAdmin(admin.ModelAdmin):
-    list_display = ['name', 'scoring_configuration', 'max_score', 'max_distance']
-    list_filter = ['scoring_configuration']
-    search_fields = ['name', 'scoring_configuration__id']
+    list_display = ['name', 'max_score', 'max_distance']
+    search_fields = ['name']
 
 
 @admin.register(CreateScoringMapLayerTask)
