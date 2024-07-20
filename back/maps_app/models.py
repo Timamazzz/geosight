@@ -183,28 +183,7 @@ class Feature(models.Model):
         ordering = ['id']
 
 
-class ScoringConfiguration(models.Model):
-    is_active = models.BooleanField(default=False, verbose_name="Активна")
-    polygon_radius = models.PositiveIntegerField(default=200, verbose_name="Радиус полигона")
-    max_scoring_layers = models.PositiveIntegerField(default=3,
-                                                     verbose_name="Максимальное число скоринговых слоев за раз")
-
-    def save(self, *args, **kwargs):
-        if self.is_active:
-            ScoringConfiguration.objects.filter(is_active=True).update(is_active=False)
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"Scoring Configuration (Active: {self.is_active})"
-
-    class Meta:
-        verbose_name = "Конфигурация скоринга"
-        verbose_name_plural = "Конфигурации скоринга"
-
-
 class POIConfig(models.Model):
-    scoring_configuration = models.ForeignKey(ScoringConfiguration, related_name='poi_configs',
-                                              on_delete=models.CASCADE)
     name = models.CharField(max_length=100, verbose_name="Название POI")
     max_score = models.IntegerField(verbose_name="Максимальный балл")
     max_distance = models.IntegerField(verbose_name="Максимальное расстояние")

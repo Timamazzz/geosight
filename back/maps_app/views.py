@@ -5,8 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from geosight.utils.ModelViewSet import ModelViewSet
-from maps_app.models import Map, MapLayer, MapStyle, CreateScoringMapLayerTask, Feature, ScoringConfiguration, \
-    MapLayerFilter
+from maps_app.models import Map, MapLayer, MapStyle, CreateScoringMapLayerTask, Feature, MapLayerFilter
 from maps_app.serializers.map_layers_serializers import MapLayerSerializer, MapLayerListSerializer, \
     MapLayerCreateSerializer, MapLayerUpdateSerializer, MapLayerScoringCreateSerializer, MapLayerPropertiesSerializer, \
     MapLayerUpdateLineStylesSerializer, MapLayerUpdatePointStylesSerializer, MapLayerUpdatePolygonStylesSerializer
@@ -244,24 +243,23 @@ class MapLayerViewSet(ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def scoring(self, request):
-        try:
-            active_config = ScoringConfiguration.objects.get(is_active=True)
-        except ScoringConfiguration.DoesNotExist:
-            return Response({"detail": "Нет активной конфигурации скоринга."},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         in_progress_tasks = CreateScoringMapLayerTask.objects.filter(
             status='in_progress').count()
 
-        if in_progress_tasks >= active_config.max_scoring_layers:
+        if in_progress_tasks >= 3:
             return Response({"detail": "Превышено максимальное количество выполняемых задач. Попробуйте позже."},
                             status=status.HTTP_429_TOO_MANY_REQUESTS)
-
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         layer = serializer.save(creator=request.user)
 
-        task = create_scoring_features.delay(layer.id)
+        poi_data = serializer.validated_data.get('poi', [])
+        polygon_radius = serializer.validated_data.get('polygon_radius', 0)
+
+        print('poi_data scoring view:', poi_data)
+        print('polygon_radius scoring view:', polygon_radius)
+        task = create_scoring_features.delay(layer.id, poi_data, polygon_radius)
 
         CreateScoringMapLayerTask.objects.create(task_id=task.id, layer=layer,
                                                  status='in_progress')

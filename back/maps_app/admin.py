@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Map, MapLayer, Feature, MapStyle, ScoringConfiguration, POIConfig, CreateScoringMapLayerTask
+from .models import Map, MapLayer, Feature, MapStyle, POIConfig, CreateScoringMapLayerTask
 from geosight.celery import app
 
 
@@ -68,21 +68,6 @@ class MapStyleAdmin(admin.ModelAdmin):
 class POIConfigInline(admin.TabularInline):
     model = POIConfig
     extra = 1
-
-
-@admin.register(ScoringConfiguration)
-class ScoringConfigurationAdmin(admin.ModelAdmin):
-    list_display = ['id', 'is_active', 'polygon_radius']
-    list_filter = ['is_active']
-    search_fields = ['id']
-    actions = ['make_active']
-    inlines = [POIConfigInline]
-
-    def make_active(self, request, queryset):
-        queryset.update(is_active=True)
-        self.message_user(request, "Successfully marked selected configurations as active.")
-
-    make_active.short_description = "Mark selected configurations as active"
 
 
 @admin.register(POIConfig)

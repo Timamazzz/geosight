@@ -8,7 +8,7 @@ import numpy as np
 from sqlalchemy import create_engine
 from math import *
 from geosight.settings import BASE_DIR
-from maps_app.models import Feature, ScoringConfiguration
+from maps_app.models import Feature
 from pyproj import Transformer
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
@@ -161,25 +161,22 @@ def balance_values(grid):
     return grid
 
 
-def process_scoring_features(layer_id, task):
+def process_scoring_features(layer_id, task, poi_data, polygon_radius):
     engine = create_engine(
         f"postgresql://{os.getenv('DB_USER_OSM')}:{os.getenv('DB_PASSWORD_OSM')}@osm_db:5432/osm-data"
     )
     grid = setup_grid(os.path.join(BASE_DIR, 'maps_app', 'scoring', 'grid.gpkg'))
 
-    try:
-        active_config = ScoringConfiguration.objects.get(is_active=True)
-    except ScoringConfiguration.DoesNotExist:
-        active_config = None
+    active_poi_data = [poi for poi in poi_data if poi.get('is_active', False)]
+    poi_list = {
+        poi.name: {
+            'max-score': poi.max_score,
+            'max-distance': poi.max_distance
+        }
+        for poi in active_poi_data
+    }
 
-    if active_config is None:
-        print("There is no active scoring configuration.")
-        return
-
-    poi_list = {poi.name: {'max-score': poi.max_score, 'max-distance': poi.max_distance} for poi in
-                active_config.poi_configs.all()}
-
-    grid = calculate_scoring(engine, grid, poi_list, active_config.polygon_radius, task)
+    grid = calculate_scoring(engine, grid, poi_list, polygon_radius, task)
 
     # Обсчитываем вторичный скоринг с разбивкой по городам
     grid = balance_values(grid)

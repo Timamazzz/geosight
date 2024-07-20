@@ -38,12 +38,12 @@ def create_features(map_layer_id, file_name, file_contents):
 
 
 @shared_task(name="create_scoring_features")
-def create_scoring_features(map_layer_id):
+def create_scoring_features(map_layer_id, poi_data, polygon_radius):
     instance = MapLayer.objects.get(id=map_layer_id)
     task = CreateScoringMapLayerTask.objects.get(layer=instance)
     try:
         print(f'Processing layer: {instance.name}')
-        process_scoring_features(map_layer_id, task)
+        process_scoring_features(map_layer_id, task, poi_data, polygon_radius)
         instance.is_active = True
         instance.save()
         task.status = 'completed'
