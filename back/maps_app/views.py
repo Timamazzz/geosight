@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from geosight.utils.ModelViewSet import ModelViewSet
-from maps_app.models import Map, MapLayer, MapStyle, CreateScoringMapLayerTask, Feature, MapLayerFilter, POI
+from maps_app.models import Map, MapLayer, MapStyle, CreateScoringMapLayerTask, Feature, MapLayerFilter, POIConfig
 from maps_app.serializers.map_layers_serializers import MapLayerSerializer, MapLayerListSerializer, \
     MapLayerCreateSerializer, MapLayerUpdateSerializer, MapLayerScoringCreateSerializer, MapLayerPropertiesSerializer, \
     MapLayerUpdateLineStylesSerializer, MapLayerUpdatePointStylesSerializer, MapLayerUpdatePolygonStylesSerializer
@@ -269,7 +269,7 @@ class MapLayerViewSet(ModelViewSet):
 
     @action(methods=['get'], detail=False)
     def poi(self, request):
-        poi_queryset = POI.objects.all()
+        poi_queryset = POIConfig.objects.all()
         serializer = POISerializer(poi_queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
