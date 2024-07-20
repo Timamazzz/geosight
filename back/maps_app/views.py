@@ -10,9 +10,9 @@ from maps_app.serializers.map_layers_serializers import MapLayerSerializer, MapL
     MapLayerCreateSerializer, MapLayerUpdateSerializer, MapLayerScoringCreateSerializer, MapLayerPropertiesSerializer, \
     MapLayerUpdateLineStylesSerializer, MapLayerUpdatePointStylesSerializer, MapLayerUpdatePolygonStylesSerializer
 from maps_app.serializers.map_serializers import MapSerializer, MapListSerializer, MapCreateSerializer, \
-    MapUpdateSerializer, MapShareSerializer, MapShowSerializer
+    MapUpdateSerializer, MapShareSerializer, MapShowSerializer, POISerializer
 from maps_app.serializers.map_layer_filter_serializers import MapLayerFilterListLayerSerializer, \
-    MapLayerFilterCreateSerializer, MapLayerFilterUpdateSerializer, POISerializer
+    MapLayerFilterCreateSerializer, MapLayerFilterUpdateSerializer
 from users_app.permissions import IsStaff, IsManager, IsSuperUser
 from users_app.serializers.user_serializers import UserCardSerializer
 from users_app.models import User
