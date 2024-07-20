@@ -6,11 +6,12 @@ from rest_framework.response import Response
 
 from geosight.utils.ModelViewSet import ModelViewSet
 from maps_app.models import Map, MapLayer, MapStyle, CreateScoringMapLayerTask, Feature, MapLayerFilter, POIConfig
-from maps_app.serializers.map_layers_serializers import MapLayerSerializer, MapLayerListSerializer, \
+from maps_app.serializers.map_layers_serializers import (MapLayerSerializer, MapLayerListSerializer, \
     MapLayerCreateSerializer, MapLayerUpdateSerializer, MapLayerScoringCreateSerializer, MapLayerPropertiesSerializer, \
-    MapLayerUpdateLineStylesSerializer, MapLayerUpdatePointStylesSerializer, MapLayerUpdatePolygonStylesSerializer
+    MapLayerUpdateLineStylesSerializer, MapLayerUpdatePointStylesSerializer, MapLayerUpdatePolygonStylesSerializer,
+                                                         POISerializer)
 from maps_app.serializers.map_serializers import MapSerializer, MapListSerializer, MapCreateSerializer, \
-    MapUpdateSerializer, MapShareSerializer, MapShowSerializer, POISerializer
+    MapUpdateSerializer, MapShareSerializer, MapShowSerializer
 from maps_app.serializers.map_layer_filter_serializers import MapLayerFilterListLayerSerializer, \
     MapLayerFilterCreateSerializer, MapLayerFilterUpdateSerializer
 from users_app.permissions import IsStaff, IsManager, IsSuperUser
