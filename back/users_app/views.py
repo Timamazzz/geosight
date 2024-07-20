@@ -21,6 +21,8 @@ from users_app.permissions import IsStaff, IsSuperUser, IsManager, IsAdmin
 from users_app.utils import has_company_access
 from django.db.models import Q
 
+from maps_app.models import Map
+
 
 class BaseResetPasswordView(generics.CreateAPIView):
     permission_classes = [AllowAny]
@@ -227,6 +229,7 @@ class UserViewSet(ModelViewSet):
     @action(methods=['get'], detail=False)
     def cards(self, request):
         search_query = request.query_params.get('search', '')
+        map_id = request.query_params.get('map', '')
         user = request.user
 
         if user.role == 'admin':
@@ -242,6 +245,13 @@ class UserViewSet(ModelViewSet):
                 Q(last_name__icontains=search_query) |
                 Q(email__icontains=search_query)
             )
+
+        if map_id:
+            try:
+                map_instance = Map.objects.get(id=map_id)
+                queryset = queryset.exclude(id__in=map_instance.users.values_list('id', flat=True))
+            except Map.DoesNotExist:
+                return Response({'detail': 'Карта не найдена.'}, status=status.HTTP_404_NOT_FOUND)
 
         page = self.paginate_queryset(queryset)
         if page is not None:
