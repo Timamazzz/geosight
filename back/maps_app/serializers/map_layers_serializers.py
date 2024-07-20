@@ -1,7 +1,7 @@
 from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 
-from maps_app.models import MapLayer
+from maps_app.models import MapLayer, POIConfig
 
 
 class MapLayerSerializer(serializers.ModelSerializer):
@@ -45,26 +45,22 @@ class MapLayerShowSerializer(WritableNestedModelSerializer):
         fields = ('id', 'name', 'description', 'serialize_styles', 'is_active')
 
 
-class POISerializer(serializers.Serializer):
+class POISerializer(serializers.ModelSerializer):
     is_active = serializers.BooleanField()
     name = serializers.CharField(max_length=100)
     max_score = serializers.IntegerField()
     max_distance = serializers.IntegerField()
 
+    class Meta:
+        model = POIConfig
+        fields = ('is_active', 'name', 'max_score', 'max_distance')
+
 
 class MapLayerScoringCreateSerializer(serializers.ModelSerializer):
-    poi = POISerializer(many=True)
-    polygon_radius = serializers.IntegerField(min_value=0)
 
     class Meta:
         model = MapLayer
-        fields = ('name', 'description', 'maps', 'polygon_radius', 'poi')
-
-    def create(self, validated_data):
-        poi_data = validated_data.pop('poi', [])
-        polygon_radius = validated_data.pop('polygon_radius', 0)
-        map_layer = super().create(validated_data)
-        return map_layer
+        fields = ('name', 'description', 'maps')
 
 
 class MapLayerPropertiesSerializer(serializers.Serializer):

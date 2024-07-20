@@ -254,8 +254,8 @@ class MapLayerViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
         layer = serializer.save(creator=request.user)
 
-        poi_data = serializer.validated_data.get('poi', [])
-        polygon_radius = serializer.validated_data.get('polygon_radius', 0)
+        poi_data = request.data.get('poi', [])
+        polygon_radius = request.data.get('polygon_radius', 0)
 
         print('poi_data scoring view:', poi_data)
         print('polygon_radius scoring view:', polygon_radius)
