@@ -164,7 +164,7 @@ class MapViewSet(ModelViewSet):
         if not has_company_access(request.user, map_instance.company):
             return Response({"detail": "У вас нет доступа к этой карте."}, status=status.HTTP_403_FORBIDDEN)
 
-        map_instance.users.add(request.user)
+        map_instance.users.add(new_allowed_user)
 
         subject = 'Доступ к карте'
         message = f'Вы получили доступ к карте. Вы можете просмотреть карту по следующей ссылке: {map_url}'
