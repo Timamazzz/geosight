@@ -126,7 +126,7 @@ class MapViewSet(ModelViewSet):
     @action(methods=['post'], detail=True, url_path='remove-allowed-users')
     def remove_allowed_users(self, request, pk=None):
         map_instance = self.get_object()
-        user_id = request.data.get('user')
+        user_id = request.query_params.get('user')
 
         if not has_company_access(request.user, map_instance.company):
             return Response({"detail": "У вас нет доступа к этой карте."}, status=status.HTTP_403_FORBIDDEN)
