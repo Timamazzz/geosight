@@ -17,7 +17,7 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'avatar', 'first_name', 'last_name', 'phone_number', 'email']
+        fields = ['id', 'avatar', 'first_name', 'last_name', 'phone_number', 'email', 'role']
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
