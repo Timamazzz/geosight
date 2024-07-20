@@ -15,11 +15,15 @@ from maps_app.serializers.map_serializers import MapSerializer, MapListSerialize
 from maps_app.serializers.map_layer_filter_serializers import MapLayerFilterListLayerSerializer, \
     MapLayerFilterCreateSerializer, MapLayerFilterUpdateSerializer
 from users_app.permissions import IsStaff, IsManager, IsSuperUser
+from users_app.serializers.user_serializers import UserCardSerializer
+from users_app.models import User
 
 from .serializers.map_serializers import MapAllowedSerializer, MapStyleUpdateSerializer
 from .serializers.map_style_seralizers import MapStyleSerializer
 from .tasks import create_features, create_scoring_features
 from users_app.utils import has_company_access
+from post_office import mail
+from django.conf import settings
 
 
 # Create your views here.
@@ -32,7 +36,8 @@ class MapViewSet(ModelViewSet):
         'update': MapUpdateSerializer,
         'share': MapShareSerializer,
         'show': MapShowSerializer,
-        'map_style': MapStyleUpdateSerializer
+        'map_style': MapStyleUpdateSerializer,
+        'get_allowed_users': UserCardSerializer,
     }
 
     def get_permissions(self):
@@ -103,6 +108,85 @@ class MapViewSet(ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response({"detail": "У вас нет доступа к этой карте."}, status=status.HTTP_403_FORBIDDEN)
+
+    @action(methods=['get'], detail=True, url_path='get-allowed-users')
+    def get_allowed_users(self, request, pk=None):
+        map_instance = self.get_object()
+        users = map_instance.users.all()
+        users = users.exclude(id=request.user.id)
+
+        page = self.paginate_queryset(users)
+        if page is not None:
+            serializer = UserCardSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = UserCardSerializer(users, many=True)
+        return Response(serializer.data)
+
+    @action(methods=['post'], detail=True, url_path='remove-allowed-users')
+    def remove_allowed_users(self, request, pk=None):
+        map_instance = self.get_object()
+        user_id = request.data.get('user')
+
+        if not has_company_access(request.user, map_instance.company):
+            return Response({"detail": "У вас нет доступа к этой карте."}, status=status.HTTP_403_FORBIDDEN)
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'detail': 'Пользователь не найден.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if user in map_instance.users.all():
+            map_instance.users.remove(user)
+
+            users = map_instance.users.all().exclude(id=request.user.id)
+
+            page = self.paginate_queryset(users)
+            if page is not None:
+                serializer = UserCardSerializer(page, many=True)
+                return self.get_paginated_response(serializer.data)
+
+            serializer = UserCardSerializer(users, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({'detail': 'Пользователь не прикреплен к карте.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(methods=['post'], detail=True, url_path='sign-allowed-users')
+    def sign_allowed_users(self, request, pk=None):
+        map_instance = self.get_object()
+        user_id = request.data.get('user')
+        map_url = request.data.get('map_url')
+        try:
+            new_allowed_user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'detail': 'Пользователь не найден.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if not has_company_access(request.user, map_instance.company):
+            return Response({"detail": "У вас нет доступа к этой карте."}, status=status.HTTP_403_FORBIDDEN)
+
+        map_instance.users.add(request.user)
+
+        subject = 'Доступ к карте'
+        message = f'Вы получили доступ к карте. Вы можете просмотреть карту по следующей ссылке: {map_url}'
+        html_message = f'<p>Вы получили доступ к карте.</p><p>Вы можете просмотреть карту по следующей ссылке: <a href="{map_url}">{map_url}</a></p>'
+
+        mail.send(
+            new_allowed_user.email,
+            settings.DEFAULT_FROM_EMAIL,
+            subject=subject,
+            message=message,
+            html_message=html_message,
+            priority='now'
+        )
+        users = map_instance.users.all().exclude(id=request.user.id)
+
+        page = self.paginate_queryset(users)
+        if page is not None:
+            serializer = UserCardSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = UserCardSerializer(users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class MapLayerViewSet(ModelViewSet):

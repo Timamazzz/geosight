@@ -19,6 +19,7 @@ from post_office import mail
 from users_app.permissions import IsStaff, IsSuperUser, IsManager, IsAdmin
 
 from users_app.utils import has_company_access
+from django.db.models import Q
 
 
 class BaseResetPasswordView(generics.CreateAPIView):
@@ -134,10 +135,11 @@ class UserViewSet(ModelViewSet):
         'list': UserListSerializer,
         'create': UserCreateSerializer,
         'edit': UserEditSerializer,
+        'cards': UserCardSerializer
     }
 
     def get_permissions(self):
-        if self.action in ['retrieve', 'update']:
+        if self.action in ['retrieve', 'update', 'cards']:
             permission_classes = [IsStaff]
         elif self.action in ['list', 'create', 'edit']:
             permission_classes = [IsManager]
@@ -220,6 +222,33 @@ class UserViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         self.perform_update(serializer)
+        return Response(serializer.data)
+
+    @action(methods=['get'], detail=False)
+    def cards(self, request):
+        search_query = request.query_params.get('search', '')
+        user = request.user
+
+        if user.role == 'admin':
+            queryset = User.objects.all()
+        else:
+            queryset = User.objects.filter(company=user.company)
+
+        queryset = queryset.exclude(id=user.id)
+
+        if search_query:
+            queryset = queryset.filter(
+                Q(first_name__icontains=search_query) |
+                Q(last_name__icontains=search_query) |
+                Q(email__icontains=search_query)
+            )
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = UserCardSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = UserCardSerializer(queryset, many=True)
         return Response(serializer.data)
 
 
