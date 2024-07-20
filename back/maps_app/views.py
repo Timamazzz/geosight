@@ -5,14 +5,14 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from geosight.utils.ModelViewSet import ModelViewSet
-from maps_app.models import Map, MapLayer, MapStyle, CreateScoringMapLayerTask, Feature, MapLayerFilter
+from maps_app.models import Map, MapLayer, MapStyle, CreateScoringMapLayerTask, Feature, MapLayerFilter, POI
 from maps_app.serializers.map_layers_serializers import MapLayerSerializer, MapLayerListSerializer, \
     MapLayerCreateSerializer, MapLayerUpdateSerializer, MapLayerScoringCreateSerializer, MapLayerPropertiesSerializer, \
     MapLayerUpdateLineStylesSerializer, MapLayerUpdatePointStylesSerializer, MapLayerUpdatePolygonStylesSerializer
 from maps_app.serializers.map_serializers import MapSerializer, MapListSerializer, MapCreateSerializer, \
     MapUpdateSerializer, MapShareSerializer, MapShowSerializer
 from maps_app.serializers.map_layer_filter_serializers import MapLayerFilterListLayerSerializer, \
-    MapLayerFilterCreateSerializer, MapLayerFilterUpdateSerializer
+    MapLayerFilterCreateSerializer, MapLayerFilterUpdateSerializer, POISerializer
 from users_app.permissions import IsStaff, IsManager, IsSuperUser
 from users_app.serializers.user_serializers import UserCardSerializer
 from users_app.models import User
@@ -203,6 +203,7 @@ class MapLayerViewSet(ModelViewSet):
         'filters': MapLayerFilterListLayerSerializer,
         'filter-create': MapLayerFilterCreateSerializer,
         'filter-update': MapLayerFilterUpdateSerializer,
+        'poi': POISerializer
     }
 
     def get_queryset(self):
@@ -265,6 +266,12 @@ class MapLayerViewSet(ModelViewSet):
                                                  status='in_progress')
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(methods=['get'], detail=False)
+    def poi(self, request):
+        poi_queryset = POI.objects.all()
+        serializer = POISerializer(poi_queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['get'])
     def properties(self, request, pk=None):
