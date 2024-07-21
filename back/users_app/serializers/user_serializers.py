@@ -60,9 +60,6 @@ class UserEditSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'first_name', 'last_name', 'phone_number', 'email', 'role']
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
 
 
 class UserCardSerializer(WritableNestedModelSerializer):
