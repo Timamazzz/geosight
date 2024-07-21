@@ -228,7 +228,8 @@ class MapLayerViewSet(ModelViewSet):
         'filter-create': MapLayerFilterCreateSerializer,
         'filter-update': MapLayerFilterUpdateSerializer,
         'poi': POISerializer,
-        'maps_from_create': MapFromMapLayerCreateSerializer
+        'maps_from_create': MapFromMapLayerCreateSerializer,
+        'data': MapLayerUpdateSerializer
     }
     search_fields = ['name', 'description']
 
@@ -494,6 +495,15 @@ class MapLayerViewSet(ModelViewSet):
 
         self.perform_destroy(instance)
         return Response({"message": "Как же я устал"}, status=status.HTTP_200_OK)
+
+    @action(methods=['get'], detail=True)
+    def data(self, request, pk=None):
+        instance = self.get_object()
+        if request.user.is_manager:
+            if not has_company_access(request.user, instance.company):
+                return Response({"detail": "У вас нет доступа к этому слою."}, status=status.HTTP_403_FORBIDDEN)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
 
 class MapStyleViewSet(ModelViewSet):
