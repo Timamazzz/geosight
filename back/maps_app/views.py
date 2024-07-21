@@ -490,7 +490,7 @@ class MapLayerViewSet(ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         if request.user.is_manager:
-            if not has_company_access(request.user, instance.company):
+            if not instance.maps.filter(company=request.user.company).is_exists():
                 return Response({"detail": "У вас нет доступа к этому слою."}, status=status.HTTP_403_FORBIDDEN)
 
         self.perform_destroy(instance)
