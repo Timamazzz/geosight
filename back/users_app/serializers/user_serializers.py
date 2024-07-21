@@ -55,7 +55,6 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
 class UserEditSerializer(serializers.ModelSerializer):
     phone_number = PhoneField()
-    confirm_password = serializers.CharField(write_only=True, label='Повторите пароль')
     role = serializers.ChoiceField(choices=ROLE_CHOICES, label="Роль", required=True)
 
     class Meta:
