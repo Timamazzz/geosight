@@ -55,7 +55,7 @@ class User(AbstractUser):
     username = models.CharField(max_length=150, unique=False, blank=True, null=True, verbose_name="Имя пользователя")
     email = models.EmailField(unique=True, blank=False, null=False, verbose_name="Email")
     phone_number = models.CharField(max_length=15, blank=True, null=True, unique=True, verbose_name="Номер телефона")
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='user', verbose_name="Роль")
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='staff', verbose_name="Роль")
     company = models.ForeignKey(Company, on_delete=models.SET_NULL, blank=True, null=True, related_name='users',
                                 verbose_name="Компания")
     avatar = models.ImageField(null=True, blank=True, verbose_name="Аватар")
