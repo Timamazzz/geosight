@@ -210,6 +210,7 @@ class MapLayerViewSet(ModelViewSet):
         'filter-update': MapLayerFilterUpdateSerializer,
         'poi': POISerializer
     }
+    search_fields = ['name', 'description']
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -219,7 +220,7 @@ class MapLayerViewSet(ModelViewSet):
             company = user.company
 
             if company:
-                queryset = queryset.filter(company=company)
+                queryset = queryset.filter(maps__company=company).distinct()
             else:
                 return Response('У пользователя нет компании', status=status.HTTP_400_BAD_REQUEST)
 
