@@ -42,6 +42,7 @@ class MapViewSet(ModelViewSet):
         'map_style': MapStyleUpdateSerializer,
         'get_allowed_users': UserCardSerializer,
     }
+    search_fields = ['name', 'description']
 
     def get_permissions(self):
         if self.action in ['show', 'map_style', 'allowed']:
