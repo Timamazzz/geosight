@@ -22,7 +22,7 @@ class MapListSerializer(serializers.ModelSerializer):
 class MapCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Map
-        fields = ('name', 'description', 'company')
+        fields = ('name', 'description', 'style', 'company')
 
 
 class MapUpdateSerializer(serializers.ModelSerializer):

@@ -7,8 +7,11 @@ from rest_framework.response import Response
 from geosight.utils.ModelViewSet import ModelViewSet
 from maps_app.models import Map, MapLayer, MapStyle, CreateScoringMapLayerTask, Feature, MapLayerFilter, POIConfig
 from maps_app.serializers.map_layers_serializers import (MapLayerSerializer, MapLayerListSerializer, \
-    MapLayerCreateSerializer, MapLayerUpdateSerializer, MapLayerScoringCreateSerializer, MapLayerPropertiesSerializer, \
-    MapLayerUpdateLineStylesSerializer, MapLayerUpdatePointStylesSerializer, MapLayerUpdatePolygonStylesSerializer,
+                                                         MapLayerCreateSerializer, MapLayerUpdateSerializer,
+                                                         MapLayerScoringCreateSerializer, MapLayerPropertiesSerializer, \
+                                                         MapLayerUpdateLineStylesSerializer,
+                                                         MapLayerUpdatePointStylesSerializer,
+                                                         MapLayerUpdatePolygonStylesSerializer,
                                                          POISerializer)
 from maps_app.serializers.map_serializers import MapSerializer, MapListSerializer, MapCreateSerializer, \
     MapUpdateSerializer, MapShareSerializer, MapShowSerializer
@@ -66,10 +69,25 @@ class MapViewSet(ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
-        if user.company:
-            serializer.save(company=user.company, creator=user, style=MapStyle.objects.all().first())
-        else:
-            return Response('У пользователя нет компании', status=status.HTTP_400_BAD_REQUEST)
+        if user.is_manager:
+            serializer.save(company=user.company, creator=user)
+        if user.is_admin:
+            serializer.save(creator=user)
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        for instance in queryset:
+            if not has_company_access(request.user, instance.company):
+                return Response({"detail": "У вас нет доступа к этой карте."}, status=status.HTTP_403_FORBIDDEN)
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(methods=['get'], detail=True)
     def show(self, request, *args, **kwargs):

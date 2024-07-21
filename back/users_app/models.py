@@ -57,7 +57,8 @@ class User(AbstractUser):
     email = models.EmailField(unique=True, blank=False, null=False, verbose_name="Email")
     phone_number = models.CharField(max_length=15, blank=True, null=True, unique=True, verbose_name="Номер телефона")
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='user', verbose_name="Роль")
-    company = models.ForeignKey(Company, on_delete=models.SET_NULL, blank=True, null=True, related_name='users', verbose_name="Компания")
+    company = models.ForeignKey(Company, on_delete=models.SET_NULL, blank=True, null=True, related_name='users',
+                                verbose_name="Компания")
     avatar = models.ImageField(null=True, blank=True, verbose_name="Аватар")
 
     objects = UserManager()
@@ -71,6 +72,14 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+
+    @property
+    def is_admin(self):
+        return self.role == 'admin'
+
+    @property
+    def is_manager(self):
+        return self.role == 'manager'
 
 
 class ActivationCode(models.Model):
