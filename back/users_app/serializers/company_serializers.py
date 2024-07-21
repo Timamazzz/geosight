@@ -20,7 +20,6 @@ class CompanyRetrieveSerializer(WritableNestedModelSerializer):
 
 
 class CompanyUpdateSerializer(WritableNestedModelSerializer):
-    users = UserCardSerializer(many=True)
 
     class Meta:
         model = Company
