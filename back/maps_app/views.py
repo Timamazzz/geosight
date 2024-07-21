@@ -41,7 +41,7 @@ class MapViewSet(ModelViewSet):
         'show': MapShowSerializer,
         'map_style': MapStyleUpdateSerializer,
         'get_allowed_users': UserCardSerializer,
-        'data': MapStyleUpdateSerializer
+        'data': MapUpdateSerializer
     }
     search_fields = ['name', 'description']
 
