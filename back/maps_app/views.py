@@ -214,7 +214,7 @@ class MapLayerViewSet(ModelViewSet):
         queryset = super().get_queryset()
         user = self.request.user
 
-        if not user.is_superuser:
+        if not user.is_admin:
             company = user.company
 
             if company:
