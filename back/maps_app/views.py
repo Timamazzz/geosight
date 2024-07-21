@@ -192,7 +192,6 @@ class MapViewSet(ModelViewSet):
         serializer = UserCardSerializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
 class MapLayerViewSet(ModelViewSet):
     queryset = MapLayer.objects.all()
     serializer_class = MapLayerSerializer

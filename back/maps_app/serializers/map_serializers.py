@@ -31,7 +31,10 @@ class MapCreateSerializer(serializers.ModelSerializer):
 class MapUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Map
-        fields = ('name', 'description')
+        fields = ('name', 'description', 'style', 'company')
+        extra_kwargs = {
+            'company': {'required': False, 'allow_null': True}
+        }
 
 
 class MapShareSerializer(WritableNestedModelSerializer):
