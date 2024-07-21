@@ -490,7 +490,7 @@ class MapLayerViewSet(ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
         if request.user.is_manager:
-            if not instance.maps.filter(company=request.user.company).is_exists():
+            if not instance.maps.filter(company=request.user.company).exists():
                 return Response({"detail": "У вас нет доступа к этому слою."}, status=status.HTTP_403_FORBIDDEN)
 
         self.perform_destroy(instance)
@@ -500,7 +500,7 @@ class MapLayerViewSet(ModelViewSet):
     def data(self, request, pk=None):
         instance = self.get_object()
         if request.user.is_manager:
-            if not instance.maps.filter(company=request.user.company).is_exists():
+            if not instance.maps.filter(company=request.user.company).exists():
                 return Response({"detail": "У вас нет доступа к этому слою."}, status=status.HTTP_403_FORBIDDEN)
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
