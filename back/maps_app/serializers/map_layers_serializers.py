@@ -129,7 +129,7 @@ class MapLayerUpdatePolygonStylesSerializer(serializers.ModelSerializer):
 
 
 class MapFromMapLayerCreateSerializer(serializers.ModelSerializer):
-    value = serializers.CharField(source='id')
+    value = serializers.IntegerField(source='id')
     display_name = serializers.CharField(source='name')
 
     class Meta:
