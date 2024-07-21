@@ -41,6 +41,7 @@ class MapViewSet(ModelViewSet):
         'show': MapShowSerializer,
         'map_style': MapStyleUpdateSerializer,
         'get_allowed_users': UserCardSerializer,
+        'data': MapStyleUpdateSerializer
     }
     search_fields = ['name', 'description']
 
@@ -201,6 +202,11 @@ class MapViewSet(ModelViewSet):
         self.perform_destroy(instance)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(methods=['get'], detail=True)
+    def data(self, request, pk=None):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
 class MapLayerViewSet(ModelViewSet):
     queryset = MapLayer.objects.all()
