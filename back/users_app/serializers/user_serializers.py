@@ -5,6 +5,11 @@ from users_app.models import User
 from django.contrib.auth.hashers import make_password
 from drf_writable_nested import WritableNestedModelSerializer
 
+ROLE_CHOICES = [
+    ('staff', 'Сотрудник'),
+    ('manager', 'Менеджер'),
+]
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -38,6 +43,7 @@ class UserListSerializer(serializers.ModelSerializer):
 
 class UserCreateSerializer(serializers.ModelSerializer):
     phone_number = PhoneField()
+    role = serializers.ChoiceField(choices=ROLE_CHOICES, label="Роль", required=True)
 
     class Meta:
         model = User
@@ -50,6 +56,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 class UserEditSerializer(serializers.ModelSerializer):
     phone_number = PhoneField()
     confirm_password = serializers.CharField(write_only=True, label='Повторите пароль')
+    role = serializers.ChoiceField(choices=ROLE_CHOICES, label="Роль", required=True)
 
     class Meta:
         model = User

@@ -48,7 +48,6 @@ class Company(models.Model):
 
 class User(AbstractUser):
     ROLE_CHOICES = [
-        ('user', 'Пользователь'),
         ('staff', 'Сотрудник'),
         ('manager', 'Менеджер'),
         ('admin', 'Администратор'),
