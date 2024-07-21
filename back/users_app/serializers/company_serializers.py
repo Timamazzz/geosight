@@ -24,10 +24,9 @@ class CompanyUpdateSerializer(WritableNestedModelSerializer):
 
     class Meta:
         model = Company
-        fields = ['id', 'name', 'users']
+        fields = ['id', 'name',]
         extra_kwargs = {
             'name': {'label': 'Введите название'},
-            'users': {'label': 'Выберите пользователей'},
         }
 
 
@@ -51,12 +50,10 @@ class CompanyListSerializer(serializers.ModelSerializer):
 
 
 class CompanyCreateSerializer(WritableNestedModelSerializer):
-    users = UserCardSerializer(many=True)
 
     class Meta:
         model = Company
-        fields = ['name', 'users']
+        fields = ['name']
         extra_kwargs = {
             'name': {'label': 'Введите название'},
-            'users': {'label': 'Выберите пользователей'},
         }
