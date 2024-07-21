@@ -74,21 +74,6 @@ class MapViewSet(ModelViewSet):
         if user.is_admin:
             serializer.save(creator=user)
 
-    def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
-
-        for instance in queryset:
-            if not has_company_access(request.user, instance.company):
-                return Response({"detail": "У вас нет доступа к этой карте."}, status=status.HTTP_403_FORBIDDEN)
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
     @action(methods=['get'], detail=True)
     def show(self, request, *args, **kwargs):
         try:
