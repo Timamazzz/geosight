@@ -270,6 +270,7 @@ class UserViewSet(ModelViewSet):
         self.perform_destroy(instance)
         return Response({"message": "Как же я устал"}, status=status.HTTP_200_OK)
 
+
 class CompanyViewSet(ModelViewSet):
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
