@@ -12,11 +12,10 @@ class CompanySerializer(serializers.ModelSerializer):
 
 
 class CompanyRetrieveSerializer(WritableNestedModelSerializer):
-    users = UserCardSerializer(many=True, read_only=True)
 
     class Meta:
         model = Company
-        fields = ['id', 'name', 'users']
+        fields = ['id', 'name']
 
 
 class CompanyUpdateSerializer(WritableNestedModelSerializer):
