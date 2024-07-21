@@ -48,7 +48,7 @@ class MapViewSet(ModelViewSet):
     def get_permissions(self):
         if self.action in ['show', 'map_style', 'allowed']:
             permission_classes = [IsStaff]
-        elif self.action in ['create', 'update', 'list', 'destroy']:
+        elif self.action in ['create', 'update', 'list', 'destroy', 'data']:
             permission_classes = [IsManager]
         else:
             permission_classes = [IsSuperUser]
@@ -205,8 +205,12 @@ class MapViewSet(ModelViewSet):
     @action(methods=['get'], detail=True)
     def data(self, request, pk=None):
         instance = self.get_object()
+        if request.user.is_manager:
+            if not has_company_access(request.user, instance.company):
+                return Response({"detail": "У вас нет доступа к этой карте."}, status=status.HTTP_403_FORBIDDEN)
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
 
 class MapLayerViewSet(ModelViewSet):
     queryset = MapLayer.objects.all()
