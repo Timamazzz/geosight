@@ -200,7 +200,7 @@ class MapViewSet(ModelViewSet):
                 return Response({"detail": "У вас нет доступа к этой карте."}, status=status.HTTP_403_FORBIDDEN)
 
         self.perform_destroy(instance)
-        return Response({"Как же я устал"}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"message":"Как же я устал"}, status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['get'], detail=True)
     def data(self, request, pk=None):
