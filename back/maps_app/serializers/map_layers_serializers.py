@@ -1,7 +1,7 @@
 from drf_writable_nested import WritableNestedModelSerializer
 from rest_framework import serializers
 
-from maps_app.models import MapLayer, POIConfig
+from maps_app.models import MapLayer, POIConfig, Map
 
 
 class MapLayerSerializer(serializers.ModelSerializer):
@@ -57,7 +57,6 @@ class POISerializer(serializers.ModelSerializer):
 
 
 class MapLayerScoringCreateSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = MapLayer
         fields = ('name', 'description', 'maps')
@@ -127,3 +126,12 @@ class MapLayerUpdatePolygonStylesSerializer(serializers.ModelSerializer):
             'polygon_value_field_name',
             'polygon_color_palette'
         )
+
+
+class MapFromMapLayerCreateSerializer(serializers.ModelSerializer):
+    value = serializers.CharField(source='id')
+    display_name = serializers.CharField(source='name')
+
+    class Meta:
+        model = Map
+        fields = ('value', 'display_name')

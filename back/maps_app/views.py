@@ -12,7 +12,7 @@ from maps_app.serializers.map_layers_serializers import (MapLayerSerializer, Map
                                                          MapLayerUpdateLineStylesSerializer,
                                                          MapLayerUpdatePointStylesSerializer,
                                                          MapLayerUpdatePolygonStylesSerializer,
-                                                         POISerializer)
+                                                         POISerializer, MapFromMapLayerCreateSerializer)
 from maps_app.serializers.map_serializers import MapSerializer, MapListSerializer, MapCreateSerializer, \
     MapUpdateSerializer, MapShareSerializer, MapShowSerializer
 from maps_app.serializers.map_layer_filter_serializers import MapLayerFilterListLayerSerializer, \
@@ -227,7 +227,8 @@ class MapLayerViewSet(ModelViewSet):
         'filters': MapLayerFilterListLayerSerializer,
         'filter-create': MapLayerFilterCreateSerializer,
         'filter-update': MapLayerFilterUpdateSerializer,
-        'poi': POISerializer
+        'poi': POISerializer,
+        'maps_from_create': MapFromMapLayerCreateSerializer
     }
     search_fields = ['name', 'description']
 
@@ -248,7 +249,7 @@ class MapLayerViewSet(ModelViewSet):
     def get_permissions(self):
         if self.action in ['line', 'point', 'polygon', 'list_filters', 'create_filter', 'delete_filter', 'edit_filter']:
             permission_classes = [IsStaff]
-        elif self.action in ['create', 'update']:
+        elif self.action in ['create', 'update', 'maps_from_create']:
             permission_classes = [IsManager]
         else:
             permission_classes = [IsSuperUser]
@@ -475,6 +476,15 @@ class MapLayerViewSet(ModelViewSet):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except MapLayerFilter.DoesNotExist:
             return Response({"detail": "Фильтр не найден."}, status=status.HTTP_404_NOT_FOUND)
+
+    @action(detail=False, methods=['get'])
+    def maps_from_create(self, request, pk=None):
+        maps = Map.objects.all()
+        if request.user.is_manager:
+            maps = Map.objects.all()
+            maps = maps.filter(company=request.user.company)
+        serializer = self.get_serializer(maps, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class MapStyleViewSet(ModelViewSet):
