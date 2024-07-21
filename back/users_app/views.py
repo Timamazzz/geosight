@@ -152,7 +152,7 @@ class UserViewSet(ModelViewSet):
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
 
-        if request.user.role == 'manager':
+        if request.user.is_manager:
             queryset = queryset.filter(company=request.user.company)
 
         page = self.paginate_queryset(queryset)
@@ -167,9 +167,9 @@ class UserViewSet(ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        if request.user.role == 'manager':
+        if request.user.is_manager:
             serializer.validated_data['company'] = request.user.company
-        elif request.user.role == 'admin':
+        elif request.user.is_admin:
             if not serializer.validated_data['company']:
                 return Response({'error': 'Не выбрана компания'}, status=status.HTTP_400_BAD_REQUEST)
 
