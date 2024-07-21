@@ -36,7 +36,7 @@ class MapLayerCreateSerializer(serializers.ModelSerializer):
 class MapLayerUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = MapLayer
-        fields = ('id', 'name', 'description')
+        fields = ('id', 'name', 'description', 'maps')
 
 
 class MapLayerShowSerializer(WritableNestedModelSerializer):
