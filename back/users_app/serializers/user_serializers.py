@@ -60,25 +60,10 @@ class UserEditSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'first_name', 'last_name', 'phone_number', 'email', 'password', 'confirm_password', 'role']
+        fields = ['id', 'first_name', 'last_name', 'phone_number', 'email', 'password', 'role']
         extra_kwargs = {
             'password': {'write_only': True}
         }
-
-    def validate(self, attrs):
-        password = attrs.get('password')
-        confirm_password = attrs.pop('confirm_password', None)
-
-        if password != confirm_password:
-            raise serializers.ValidationError("Пароль и подтверждение пароля не совпадают.")
-
-        return attrs
-
-    def update(self, instance, validated_data):
-        if 'password' in validated_data:
-            validated_data['password'] = make_password(validated_data['password'])
-
-        return super().update(instance, validated_data)
 
 
 class UserCardSerializer(WritableNestedModelSerializer):
