@@ -91,7 +91,6 @@ services:
       - web
       - martin
       - daphne
-    entrypoint: [ "/nginx.sh" ]
   celery:
     build:
       context: ./back
