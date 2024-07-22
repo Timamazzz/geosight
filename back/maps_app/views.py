@@ -514,7 +514,11 @@ class MapLayerViewSet(ModelViewSet):
 
     @action(methods=['get'], detail=False)
     def scoring_list(self, request, *args, **kwargs):
+        user = self.request.user
         queryset = CreateScoringMapLayerTask.objects.all()
+
+        if user.is_manager:
+            queryset = queryset.filter(layer__company=user.company)
 
         page = self.paginate_queryset(queryset)
         if page is not None:
