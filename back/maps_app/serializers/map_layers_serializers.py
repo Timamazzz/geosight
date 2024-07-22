@@ -56,10 +56,14 @@ class POISerializer(serializers.ModelSerializer):
         fields = ('is_active', 'name', 'max_score', 'max_distance')
 
 
-class MapLayerScoringCreateSerializer(serializers.ModelSerializer):
+class MapLayerScoringCreateSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length='256', required=True, label='Название')
+    description = serializers.CharField(required=False, allow_blank=True, label='Описание')
+    maps = serializers.PrimaryKeyRelatedField(queryset=Map.objects.all(), label='Карта')
+    poi = POISerializer(many=True)
+
     class Meta:
-        model = MapLayer
-        fields = ('name', 'description', 'maps')
+        fields = ('name', 'description', 'maps', 'poi')
 
 
 class MapLayerPropertiesSerializer(serializers.Serializer):

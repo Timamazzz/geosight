@@ -275,12 +275,6 @@ class MapLayerViewSet(ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def scoring(self, request):
-        serializer = self.get_serializer(data=request.data)
-
-        if request.user.is_manager:
-            if not has_company_access(request.user, serializer.maps.first().company):
-                return Response('У тебя нет прав!', status=status.HTTP_403_FORBIDDEN)
-
         in_progress_tasks = CreateScoringMapLayerTask.objects.filter(
             status='in_progress').count()
 
@@ -288,8 +282,12 @@ class MapLayerViewSet(ModelViewSet):
             return Response({"detail": "Превышено максимальное количество выполняемых задач. Попробуйте позже."},
                             status=status.HTTP_429_TOO_MANY_REQUESTS)
 
-        serializer.is_valid(raise_exception=True)
-        layer = serializer.save(creator=request.user)
+        layer = MapLayer.objects.create(
+            name=request.data['name'],
+            description=request.data['description'],
+            maps=request.data['maps'],
+            creator=request.user
+        )
 
         poi_data = request.data.get('poi', [])
         polygon_radius = request.data.get('polygon_radius', 0)
@@ -301,7 +299,15 @@ class MapLayerViewSet(ModelViewSet):
         CreateScoringMapLayerTask.objects.create(task_id=task.id, layer=layer,
                                                  status='in_progress')
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        queryset = CreateScoringMapLayerTask.objects.all().order_by('-id')
+
+        if request.user.is_manager:
+            queryset = queryset.filter(layer__company=request.user.company).order_by('-id')
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = ScoringLayerListSerializer(page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
 
     @action(methods=['get'], detail=False)
     def poi(self, request):
@@ -543,6 +549,9 @@ class MapLayerViewSet(ModelViewSet):
             task.layer.delete()
 
         queryset = CreateScoringMapLayerTask.objects.all().order_by('-id')
+
+        if request.user.is_manager:
+            queryset = queryset.filter(layer__company=request.user.company).order_by('-id')
 
         page = self.paginate_queryset(queryset)
         if page is not None:
