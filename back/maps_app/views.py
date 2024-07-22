@@ -285,9 +285,9 @@ class MapLayerViewSet(ModelViewSet):
         layer = MapLayer.objects.create(
             name=request.data['name'],
             description=request.data['description'],
-            maps=request.data['maps'],
             creator=request.user
         )
+        layer.maps.set(request.data['maps'])
 
         poi_data = request.data.get('poi', [])
         polygon_radius = request.data.get('polygon_radius', 0)
