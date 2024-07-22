@@ -46,10 +46,10 @@ class MapLayerShowSerializer(WritableNestedModelSerializer):
 
 
 class POISerializer(serializers.ModelSerializer):
-    is_active = serializers.BooleanField(default=True)
-    name = serializers.CharField(max_length=100)
-    max_score = serializers.IntegerField()
-    max_distance = serializers.IntegerField()
+    is_active = serializers.BooleanField(default=True, label="Активный")
+    name = serializers.CharField(max_length=100, label="Название")
+    max_score = serializers.IntegerField(label="Вес")
+    max_distance = serializers.IntegerField(label="Дситаниця")
 
     class Meta:
         model = POIConfig
@@ -60,7 +60,7 @@ class MapLayerScoringCreateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length='256', required=True, label='Название')
     description = serializers.CharField(required=False, allow_blank=True, label='Описание')
     maps = serializers.PrimaryKeyRelatedField(queryset=Map.objects.all(), label='Карта')
-    polygon_radius = serializers.IntegerField(min_value=0, default=1200, label='Полигон радиус')
+    polygon_radius = serializers.IntegerField(min_value=0, default=1200, required=True, label='Полигон радиус')
     poi = POISerializer(many=True)
 
     class Meta:
