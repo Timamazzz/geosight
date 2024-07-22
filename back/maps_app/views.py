@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.db.models import Min, Max, F, BigIntegerField, FloatField
 from django.db.models.functions import Cast
 from rest_framework import status
@@ -537,7 +538,7 @@ class MapLayerViewSet(ModelViewSet):
         if task.status == 'in_progress':
             app.control.revoke(task.task_id, terminate=True)
             task.status = 'killed'
-            task.end_time = django.utils.timezone.now()
+            task.end_time = timezone.now()
             task.save()
             task.layer.delete()
 

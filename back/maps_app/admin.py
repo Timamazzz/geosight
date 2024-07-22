@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import Map, MapLayer, Feature, MapStyle, POIConfig, CreateScoringMapLayerTask
 from geosight.celery import app
+from django.utils import timezone
 
 
 @admin.register(Map)
@@ -89,7 +90,7 @@ class CreateScoringMapLayerTaskAdmin(admin.ModelAdmin):
                 app.control.revoke(task.task_id, terminate=True)
 
                 task.status = 'killed'
-                task.end_time = django.utils.timezone.now()
+                task.end_time = timezone.now()
                 task.save()
 
                 task.layer.delete()
