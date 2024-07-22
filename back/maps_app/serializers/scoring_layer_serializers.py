@@ -17,5 +17,8 @@ class ScoringLayerListSerializer(serializers.ModelSerializer):
         fields = ('id', 'task_id', 'layer', 'maps', 'status', 'created_at', 'end_time')
 
     def get_maps(self, obj):
-        maps = obj.layer.maps.all()
-        return [map.name for map in maps]
+        if obj.layer:
+            maps = obj.layer.maps.all()
+            return [map.name for map in maps]
+        else:
+            return None
