@@ -11,7 +11,7 @@ class ScoringLayerSerializer(serializers.ModelSerializer):
 
 class ScoringLayerListSerializer(serializers.ModelSerializer):
     maps = serializers.SerializerMethodField(label='Карта')
-    layer = serializers.CharField(source='layer.name', label='Название')
+    layer = serializers.SerializerMethodField(label='Название')
 
     class Meta:
         model = CreateScoringMapLayerTask
@@ -23,3 +23,7 @@ class ScoringLayerListSerializer(serializers.ModelSerializer):
             return [map.name for map in maps]
         else:
             return None
+
+    def get_layer(self,obj):
+        return obj.layer.name if obj.layer else None
+
