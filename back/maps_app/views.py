@@ -232,7 +232,8 @@ class MapLayerViewSet(ModelViewSet):
         'filter-update': MapLayerFilterUpdateSerializer,
         'poi': POISerializer,
         'maps_from_create': MapFromMapLayerCreateSerializer,
-        'data': MapLayerUpdateSerializer
+        'data': MapLayerUpdateSerializer,
+        'scoring_list': ScoringLayerListSerializer,
     }
     search_fields = ['name', 'description']
 
@@ -522,7 +523,7 @@ class MapLayerViewSet(ModelViewSet):
 
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = ScoringLayerListSerializer(page, many=True, context={'request': request})
+            serializer = self.get_serializer(page, many=True, context={'request': request})
             return self.get_paginated_response(serializer.data)
 
     @action(methods=['post'], detail=False)
