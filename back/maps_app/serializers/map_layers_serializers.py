@@ -60,7 +60,7 @@ class MapLayerScoringCreateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length='256', required=True, label='Название')
     description = serializers.CharField(required=False, allow_blank=True, label='Описание')
     maps = serializers.PrimaryKeyRelatedField(queryset=Map.objects.all(), label='Карта')
-    polygon_radius = serializers.IntegerField(min_value=0, default=1200, required=True, label='Полигон радиус')
+    polygon_radius = serializers.IntegerField(min_value=0, required=True, label='Полигон радиус')
     poi = POISerializer(many=True)
 
     class Meta:
