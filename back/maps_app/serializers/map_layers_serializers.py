@@ -46,7 +46,7 @@ class MapLayerShowSerializer(WritableNestedModelSerializer):
 
 
 class POISerializer(serializers.ModelSerializer):
-    is_active = serializers.BooleanField(required=True, label="Активный")
+    is_active = serializers.BooleanField(label="Активный")
     name = serializers.CharField(max_length=100, required=True, label="Название")
     max_score = serializers.IntegerField(required=True, label="Вес")
     max_distance = serializers.IntegerField(required=True, label="Дистанция")
