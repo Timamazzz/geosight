@@ -548,6 +548,11 @@ class MapLayerViewSet(ModelViewSet):
             serializer = ScoringLayerListSerializer(page, many=True, context={'request': request})
             return self.get_paginated_response(serializer.data)
 
+    @action(methods=['get'], detail=False)
+    def scoring_active(self, request, *args, **kwargs):
+        return Response({'count':  CreateScoringMapLayerTask.objects.filter(status='in_progress').count()},
+                        status=status.HTTP_200_OK)
+
 
 class MapStyleViewSet(ModelViewSet):
     queryset = MapStyle.objects.all()
