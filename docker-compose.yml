@@ -80,6 +80,9 @@ services:
       dockerfile: ./Dockerfile
     env_file:
       - .env
+    environment:
+      - EMAIL=geosight@email.com
+      - DOMAIN=app.geosight.ru
     volumes:
       - ./back/static/:/var/www/geosight/static
       - ./front/build/:/var/www/geosight/front
