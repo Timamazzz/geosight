@@ -89,6 +89,7 @@ class CreateScoringMapLayerTaskAdmin(admin.ModelAdmin):
                 app.control.revoke(task.task_id, terminate=True)
 
                 task.status = 'killed'
+                task.end_time = django.utils.timezone.now()
                 task.save()
 
                 task.layer.delete()
