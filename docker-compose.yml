@@ -75,14 +75,7 @@ services:
       web:
         condition: service_healthy
   nginx:
-    build:
-      context: ./nginx
-      dockerfile: ./Dockerfile
-    env_file:
-      - .env
-    environment:
-      - EMAIL=geosight@email.com
-      - DOMAIN=app.geosight.ru
+    image: nginx:latest
     volumes:
       - ./back/static/:/var/www/geosight/static
       - ./front/build/:/var/www/geosight/front
