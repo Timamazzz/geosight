@@ -49,7 +49,7 @@ class POISerializer(serializers.ModelSerializer):
     is_active = serializers.BooleanField(default=True, label="Активный")
     name = serializers.CharField(max_length=100, label="Название")
     max_score = serializers.IntegerField(label="Вес")
-    max_distance = serializers.IntegerField(label="Дситаниця")
+    max_distance = serializers.IntegerField(label="Дистанция")
 
     class Meta:
         model = POIConfig
