@@ -255,7 +255,7 @@ class MapLayerViewSet(ModelViewSet):
     def get_permissions(self):
         if self.action in ['line', 'point', 'polygon', 'list_filters', 'create_filter', 'delete_filter', 'edit_filter']:
             permission_classes = [IsStaff]
-        elif self.action in ['create', 'update', 'maps_from_create', 'scoring', 'scoring_list', 'scoring_stop']:
+        elif self.action in ['create', 'update', 'maps_from_create', 'scoring', 'scoring_list', 'scoring_stop', 'poi']:
             permission_classes = [IsManager]
         else:
             permission_classes = [IsSuperUser]
