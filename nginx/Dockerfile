@@ -11,9 +11,5 @@ COPY ./nginx.conf /etc/nginx/nginx.conf
 COPY ./init-letsencrypt.sh /init-letsencrypt.sh
 RUN chmod +x /init-letsencrypt.sh
 
-# Установка переменных окружения для Certbot
-ENV EMAIL=geosight@email.com
-ENV DOMAIN=app.geosight.ru
-
 # Запуск скрипта и nginx
 CMD ["/bin/bash", "-c", "/init-letsencrypt.sh && nginx -g 'daemon off;'"]
