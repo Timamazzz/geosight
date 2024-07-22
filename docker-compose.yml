@@ -84,7 +84,8 @@ services:
       - ./front/build/:/var/www/geosight/front
       - media_data:/var/www/geosight/media
       - ./nginx/nginx.sh:/nginx.sh
-    command: /bin/sh /nginx.sh
+    command: sh -c "RUN chmod +x /nginx.sh && 
+                    /bin/sh /nginx.sh"
     restart: always
     ports:
       - 80:80

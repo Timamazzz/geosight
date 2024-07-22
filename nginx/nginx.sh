@@ -3,6 +3,8 @@
 apt-get update
 apt-get install -y certbot python3-certbot-nginx
 
+mkdir -p /etc/letsencrypt
+
 # Остановка текущего процесса nginx, если он запущен
 nginx -s stop
 
