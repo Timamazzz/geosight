@@ -15,7 +15,7 @@ class ScoringLayerListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CreateScoringMapLayerTask
-        fields = ('id', 'task_id', 'layer', 'maps', 'status', 'created_at', 'end_time')
+        fields = ('id', 'layer', 'maps', 'status', 'created_at', 'end_time')
 
     def get_maps(self, obj):
         if obj.layer:
