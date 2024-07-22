@@ -211,6 +211,9 @@ class CreateScoringMapLayerTask(models.Model):
     error_message = models.TextField(blank=True, null=True, verbose_name="Сообщение об ошибке")
     calculate_scoring_progress = models.FloatField(default=0, verbose_name="Прогресс расчета баллов")
     polygon_import_progress = models.FloatField(default=0, verbose_name="Прогресс импорта полигонов")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата и время создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата и время последнего редактирования")
+    end_time = models.DateTimeField(null=True, blank=True, verbose_name="Время окончания")
 
     def __str__(self):
         return f'Task {self.task_id} - {self.get_status_display()}'

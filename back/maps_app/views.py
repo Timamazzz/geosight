@@ -5,7 +5,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from geosight.utils.ModelViewSet import ModelViewSet
-from maps_app.models import Map, MapLayer, MapStyle, CreateScoringMapLayerTask, Feature, MapLayerFilter, POIConfig
+from maps_app.models import (Map, MapLayer, MapStyle, CreateScoringMapLayerTask, Feature, MapLayerFilter, POIConfig,
+                             CreateScoringMapLayerTask)
 from maps_app.serializers.map_layers_serializers import (MapLayerSerializer, MapLayerListSerializer, \
                                                          MapLayerCreateSerializer, MapLayerUpdateSerializer,
                                                          MapLayerScoringCreateSerializer, MapLayerPropertiesSerializer, \
@@ -23,10 +24,12 @@ from users_app.models import User
 
 from .serializers.map_serializers import MapAllowedSerializer, MapStyleUpdateSerializer
 from .serializers.map_style_seralizers import MapStyleSerializer
+from .serializers.scoring_layer_serializers import ScoringLayerSerializer, ScoringLayerListSerializer
 from .tasks import create_features, create_scoring_features
 from users_app.utils import has_company_access
 from post_office import mail
 from django.conf import settings
+from geosight.celery import app
 
 
 # Create your views here.
@@ -250,11 +253,10 @@ class MapLayerViewSet(ModelViewSet):
     def get_permissions(self):
         if self.action in ['line', 'point', 'polygon', 'list_filters', 'create_filter', 'delete_filter', 'edit_filter']:
             permission_classes = [IsStaff]
-        elif self.action in ['create', 'update', 'maps_from_create']:
+        elif self.action in ['create', 'update', 'maps_from_create', 'scoring', 'scoring_list', 'scoring_stop']:
             permission_classes = [IsManager]
         else:
             permission_classes = [IsSuperUser]
-
         return [permission() for permission in permission_classes]
 
     def perform_create(self, serializer):
@@ -271,6 +273,11 @@ class MapLayerViewSet(ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def scoring(self, request):
+        serializer = self.get_serializer(data=request.data)
+
+        if request.user.is_manager:
+            if not has_company_access(request.user, serializer.maps.first().company):
+                return Response('У тебя нет прав!', status=status.HTTP_403_FORBIDDEN)
 
         in_progress_tasks = CreateScoringMapLayerTask.objects.filter(
             status='in_progress').count()
@@ -278,7 +285,7 @@ class MapLayerViewSet(ModelViewSet):
         if in_progress_tasks >= 3:
             return Response({"detail": "Превышено максимальное количество выполняемых задач. Попробуйте позже."},
                             status=status.HTTP_429_TOO_MANY_REQUESTS)
-        serializer = self.get_serializer(data=request.data)
+
         serializer.is_valid(raise_exception=True)
         layer = serializer.save(creator=request.user)
 
@@ -504,6 +511,37 @@ class MapLayerViewSet(ModelViewSet):
                 return Response({"detail": "У вас нет доступа к этому слою."}, status=status.HTTP_403_FORBIDDEN)
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+    @action(methods=['get'], detail=False)
+    def scoring_list(self, request, *args, **kwargs):
+        queryset = CreateScoringMapLayerTask.objects.all()
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = ScoringLayerListSerializer(page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
+
+    @action(methods=['post'], detail=False)
+    def scoring_stop(self, request, *args, **kwargs):
+        scoring_task_id = request.query_params.get('id')
+        task = CreateScoringMapLayerTask.objects.get(id=scoring_task_id)
+
+        if request.user.is_manager and not has_company_access(request.user, task.layer.maps().first()):
+            return Response({"detail": "У вас нет доступа к этому слою."}, status=status.HTTP_403_FORBIDDEN)
+
+        if task.status == 'in_progress':
+            app.control.revoke(task.task_id, terminate=True)
+            task.status = 'killed'
+            task.end_time = django.utils.timezone.now()
+            task.save()
+            task.layer.delete()
+
+        queryset = CreateScoringMapLayerTask.objects.all()
+
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = ScoringLayerListSerializer(page, many=True, context={'request': request})
+            return self.get_paginated_response(serializer.data)
 
 
 class MapStyleViewSet(ModelViewSet):

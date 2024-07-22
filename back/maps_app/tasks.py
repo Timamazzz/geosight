@@ -51,6 +51,7 @@ def create_scoring_features(map_layer_id, poi_data, polygon_radius):
         instance.is_active = True
         instance.save()
         task.status = 'completed'
+        task.end_time = django.utils.timezone.now()
         task.save()
         print(f'Complete create features for layer: {instance.name}')
 
@@ -58,5 +59,6 @@ def create_scoring_features(map_layer_id, poi_data, polygon_radius):
     except Exception as e:
         task.status = 'failed'
         task.error_message = str(e)
+        task.end_time = django.utils.timezone.now()
         task.save()
         print(f'Error processing layer {instance.name}: {e}')
