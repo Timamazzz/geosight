@@ -11,7 +11,7 @@ class ScoringLayerSerializer(serializers.ModelSerializer):
 
 class ScoringLayerListSerializer(serializers.ModelSerializer):
     maps = serializers.SerializerMethodField(label='Карта')
-    layer = serializers.CharField(source='layer.name', read_only=True, label='Название')
+    layer = serializers.CharField(source='layer.name', label='Название')
 
     class Meta:
         model = CreateScoringMapLayerTask
