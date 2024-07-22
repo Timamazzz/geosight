@@ -8,8 +8,8 @@ RUN apt-get update && \
 #RUN wget https://raw.githubusercontent.com/certbot/certbot/master/certbot-nginx/certbot_nginx/_internal/tls_configs/options-ssl-nginx.conf -O /etc/letsencrypt/options-ssl-nginx.conf && \
 #    wget https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/ssl-dhparams.pem -O /etc/letsencrypt/ssl-dhparams.pem
 
-#COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
-#COPY ./nginx/nginx.sh /nginx.sh
+COPY ./nginx/nginx.conf /etc/nginx/nginx.conf
+COPY ./nginx/nginx.sh /nginx.sh
 
 RUN chmod +x /nginx.sh
 
