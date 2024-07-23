@@ -29,7 +29,6 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
 
 class UserUpdateSerializer(serializers.ModelSerializer):
     phone_number = PhoneField()
-    avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = User
