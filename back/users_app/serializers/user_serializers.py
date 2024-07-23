@@ -34,12 +34,6 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'avatar', 'first_name', 'last_name', 'phone_number', 'email']
 
-    def update(self, instance, validated_data):
-        avatar = validated_data.pop('avatar', None)
-        if avatar:
-            instance.avatar = avatar
-        return super().update(instance, validated_data)
-
 
 class UserListSerializer(serializers.ModelSerializer):
     phone_number = PhoneField()
