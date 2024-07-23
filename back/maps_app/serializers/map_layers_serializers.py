@@ -122,6 +122,7 @@ class MapLayerUpdatePolygonStylesSerializer(serializers.ModelSerializer):
             'id',
             'polygon_opacity',
             'polygon_label',
+            'polygon_label_field_value',
             'polygon_label_font',
             'polygon_label_font_style',
             'polygon_label_font_size',
