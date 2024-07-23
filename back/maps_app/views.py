@@ -527,7 +527,9 @@ class MapLayerViewSet(ModelViewSet):
         queryset = CreateScoringMapLayerTask.objects.all().order_by('-id')
 
         if user.is_manager:
-            queryset = MapLayer.objects.filter(maps__company=user.company).distinct().order_by('-id')
+            queryset = CreateScoringMapLayerTask.objects.filter(
+                layer__maps__company=user.company
+            ).distinct().order_by('-id')
 
         search = request.query_params.get('search', None)
         if search:
