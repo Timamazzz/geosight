@@ -70,7 +70,7 @@ class MapViewSet(ModelViewSet):
             if company:
                 queryset = queryset.filter(company=company)
             else:
-                queryset = None
+                queryset = Map.objects.none()
 
         return queryset
 
@@ -249,7 +249,7 @@ class MapLayerViewSet(ModelViewSet):
             if company:
                 queryset = queryset.filter(maps__company=company).distinct()
             else:
-                queryset = None
+                queryset = MapLayer.objects.none()
 
         return queryset
 
