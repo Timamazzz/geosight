@@ -70,7 +70,7 @@ class MapViewSet(ModelViewSet):
             if company:
                 queryset = queryset.filter(company=company)
             else:
-                return Response('У пользователя нет компании', status=status.HTTP_400_BAD_REQUEST)
+                queryset = None
 
         return queryset
 
@@ -249,7 +249,7 @@ class MapLayerViewSet(ModelViewSet):
             if company:
                 queryset = queryset.filter(maps__company=company).distinct()
             else:
-                return Response('У пользователя нет компании', status=status.HTTP_400_BAD_REQUEST)
+                queryset = None
 
         return queryset
 
