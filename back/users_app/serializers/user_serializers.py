@@ -37,7 +37,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     def get_avatar(self, obj):
         if obj.avatar:
-            url = default_storage.url(obj.avatar.path)
+            url = obj.avatar.path
             return url.replace("media/", "")
         return None
 
