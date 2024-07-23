@@ -34,7 +34,7 @@ class CompanyListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Company
-        fields = ['id', 'name', 'staff', 'managers', 'admins']
+        fields = ['id', 'name', 'staff', 'managers']
 
     def get_staff(self, obj):
         return User.objects.filter(company=obj, role='staff').count()

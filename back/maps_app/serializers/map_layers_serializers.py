@@ -25,7 +25,7 @@ class MapLayerListSerializer(serializers.ModelSerializer):
     @staticmethod
     def get_maps_count(obj):
         if obj:
-            maps = obj.layer.maps.all()
+            maps = obj.maps.all()
             return [map.name for map in maps]
         else:
             return None
