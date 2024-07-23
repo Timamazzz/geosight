@@ -1,9 +1,10 @@
 from rest_framework import serializers
-
 from geosight.utils.fields import PhoneField
 from users_app.models import User
 from django.contrib.auth.hashers import make_password
 from drf_writable_nested import WritableNestedModelSerializer
+from django.core.files.storage import default_storage
+
 
 ROLE_CHOICES = [
     ('staff', 'Сотрудник'),
@@ -36,7 +37,8 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
     def get_avatar(self, obj):
         if obj.avatar:
-            return obj.avatar.url
+            url = default_storage.url(obj.avatar.path)
+            return url.replace("media/", "")
         return None
 
     def update(self, instance, validated_data):
@@ -44,6 +46,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         if avatar:
             instance.avatar = avatar
         return super().update(instance, validated_data)
+
 
 class UserListSerializer(serializers.ModelSerializer):
     phone_number = PhoneField()
