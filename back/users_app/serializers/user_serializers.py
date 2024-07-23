@@ -35,12 +35,6 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'avatar', 'first_name', 'last_name', 'phone_number', 'email']
 
-    def get_avatar(self, obj):
-        if obj.avatar:
-            url = obj.avatar.path
-            return url.replace("media/", "")
-        return None
-
     def update(self, instance, validated_data):
         avatar = validated_data.pop('avatar', None)
         if avatar:
