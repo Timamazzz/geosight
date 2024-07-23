@@ -139,6 +139,7 @@ class UserViewSet(ModelViewSet):
         'edit': UserEditSerializer,
         'cards': UserCardSerializer
     }
+    search_fields = ('id', 'first_name', 'last_name', 'email', 'phone_number')
 
     def get_permissions(self):
         if self.action in ['retrieve', 'update', 'cards']:
@@ -169,6 +170,9 @@ class UserViewSet(ModelViewSet):
 
         if request.user.is_manager:
             serializer.validated_data['company'] = request.user.company
+            if serializer.validated_data['role'] == 'admin':
+                return Response({"detail": "У вас нет доступа создавать администраторов"},
+                                status=status.HTTP_403_FORBIDDEN)
         elif request.user.is_admin:
             if not serializer.validated_data['company']:
                 return Response({'error': 'Не выбрана компания'}, status=status.HTTP_400_BAD_REQUEST)
@@ -224,7 +228,12 @@ class UserViewSet(ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         self.perform_update(serializer)
+
+        # Return the updated instance with the correct URL for the avatar
         return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        serializer.save()
 
     @action(methods=['get'], detail=False)
     def cards(self, request):
@@ -281,3 +290,4 @@ class CompanyViewSet(ModelViewSet):
         'create': CompanyCreateSerializer,
     }
     permission_classes = [IsAdmin]
+    search_fields = ('id', 'name')

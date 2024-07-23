@@ -8,6 +8,7 @@ from drf_writable_nested import WritableNestedModelSerializer
 ROLE_CHOICES = [
     ('staff', 'Сотрудник'),
     ('manager', 'Менеджер'),
+    ('admin', 'Администратор'),
 ]
 
 
@@ -27,11 +28,22 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
 
 class UserUpdateSerializer(serializers.ModelSerializer):
     phone_number = PhoneField()
+    avatar = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ['id', 'avatar', 'first_name', 'last_name', 'phone_number', 'email']
 
+    def get_avatar(self, obj):
+        if obj.avatar:
+            return obj.avatar.url
+        return None
+
+    def update(self, instance, validated_data):
+        avatar = validated_data.pop('avatar', None)
+        if avatar:
+            instance.avatar = avatar
+        return super().update(instance, validated_data)
 
 class UserListSerializer(serializers.ModelSerializer):
     phone_number = PhoneField()

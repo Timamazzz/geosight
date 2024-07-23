@@ -93,6 +93,8 @@ class MapLayer(models.Model):
     )
 
     polygon_label = models.CharField(max_length=1024, null=True, blank=True, verbose_name="Метка полигона")
+    polygon_label_field_value = models.CharField(max_length=1024, null=True, blank=True,
+                                                 verbose_name="Метка полигона(По полю)")
     polygon_label_font = models.CharField(max_length=256, default="arial", null=True, blank=True,
                                           verbose_name="Шрифт метки полигона")
     polygon_label_font_style = models.CharField(max_length=256, default="medium", null=True, blank=True,
@@ -152,6 +154,7 @@ class MapLayer(models.Model):
             'polygon': {
                 'polygon_opacity': self.polygon_opacity,
                 'polygon_label': self.polygon_label,
+                'polygon_label_field_value': self.polygon_label_field_value,
                 'polygon_label_font': self.polygon_label_font,
                 'polygon_label_font_style': self.polygon_label_font_style,
                 'polygon_label_font_size': self.polygon_label_font_size,

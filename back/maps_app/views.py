@@ -31,6 +31,7 @@ from users_app.utils import has_company_access
 from post_office import mail
 from django.conf import settings
 from geosight.celery import app
+from django.db.models import Q
 
 
 # Create your views here.
@@ -47,7 +48,7 @@ class MapViewSet(ModelViewSet):
         'get_allowed_users': UserCardSerializer,
         'data': MapUpdateSerializer
     }
-    search_fields = ['name', 'description']
+    search_fields = ['id', 'name', 'description']
 
     def get_permissions(self):
         if self.action in ['show', 'map_style', 'allowed']:
@@ -236,7 +237,7 @@ class MapLayerViewSet(ModelViewSet):
         'data': MapLayerUpdateSerializer,
         'scoring_list': ScoringLayerListSerializer,
     }
-    search_fields = ['name', 'description']
+    search_fields = ['id', 'name', 'description']
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -528,10 +529,21 @@ class MapLayerViewSet(ModelViewSet):
         if user.is_manager:
             queryset = queryset.filter(layer__company=user.company).order_by('-id')
 
+        search = request.query_params.get('search', None)
+        if search:
+            queryset = queryset.filter(
+                Q(id__icontains=search) |
+                Q(layer__name__icontains=search) |
+                Q(layer__maps__name__icontains=search)
+            ).distinct()
+
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(methods=['post'], detail=False)
     def scoring_stop(self, request, *args, **kwargs):

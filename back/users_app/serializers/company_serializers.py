@@ -31,7 +31,6 @@ class CompanyUpdateSerializer(WritableNestedModelSerializer):
 class CompanyListSerializer(serializers.ModelSerializer):
     staff = serializers.SerializerMethodField(label='Сотрудники')
     managers = serializers.SerializerMethodField(label='Менеджеры')
-    admins = serializers.SerializerMethodField(label='Администраторыы')
 
     class Meta:
         model = Company
@@ -42,9 +41,6 @@ class CompanyListSerializer(serializers.ModelSerializer):
 
     def get_managers(self, obj):
         return User.objects.filter(company=obj, role='manager').count()
-
-    def get_admins(self, obj):
-        return User.objects.filter(company=obj, role='admin').count()
 
 
 class CompanyCreateSerializer(WritableNestedModelSerializer):
