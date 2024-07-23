@@ -27,8 +27,9 @@ class UserRetrieveSerializer(serializers.ModelSerializer):
         fields = ['id', 'avatar', 'first_name', 'last_name', 'phone_number', 'email', 'role']
 
 
-class UserUpdateSerializer(serializers.ModelSerializer):
-    phone_number = PhoneField()
+class UserUpdateSerializer(WritableNestedModelSerializer):
+    phone_number = PhoneField(label='Телефон')
+    avatar = serializers.CharField(label='Аватар')
 
     class Meta:
         model = User
