@@ -285,7 +285,7 @@ class MapLayerViewSet(ModelViewSet):
 
         layer = MapLayer.objects.create(
             name=request.data['name'],
-            description=request.data['description'],
+            description=request.data.get('description', None),
             creator=request.user
         )
         layer.maps.set(request.data['maps'])
